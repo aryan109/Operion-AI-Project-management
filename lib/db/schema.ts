@@ -283,7 +283,7 @@ export const activityEvents = pgTable(
     actorUserId: uuid("actor_user_id").references(() => profiles.id),
     actorAgentId: uuid("actor_agent_id").references(() => agentIdentities.id),
     entityType: text("entity_type").notNull(),
-    entityId: uuid("entity_id").notNull(),
+    entityId: text("entity_id").notNull(),
     action: text("action").notNull(),
     before: jsonb("before"),
     after: jsonb("after"),

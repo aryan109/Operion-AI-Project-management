@@ -16,17 +16,38 @@ export async function record(
   input: RecordActivityInput
 ): Promise<Result<{ id: string }>> {
   try {
+    const isUuid = (id?: string | null) =>
+      typeof id === "string" &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+    const actorUserId =
+      ctx.actor.type === "user" && isUuid(ctx.actor.id) ? ctx.actor.id : null;
+    const actorAgentId =
+      ctx.actor.type === "agent" && isUuid(ctx.actor.id) ? ctx.actor.id : null;
+
+    let enrichedAfter = input.after;
+    if (ctx.actor.id && !isUuid(ctx.actor.id)) {
+      enrichedAfter = {
+        ...(input.after || {}),
+        _actorContext: {
+          type: ctx.actor.type,
+          id: ctx.actor.id,
+          role: ctx.actor.role,
+        },
+      };
+    }
+
     const [event] = await db
       .insert(activityEvents)
       .values({
         organizationId: ctx.organizationId,
-        actorUserId: ctx.actor.type === "user" ? ctx.actor.id : null,
-        actorAgentId: ctx.actor.type === "agent" ? ctx.actor.id : null,
+        actorUserId,
+        actorAgentId,
         entityType: input.entityType,
-        entityId: input.entityId,
+        entityId: String(input.entityId),
         action: input.action,
         before: input.before ?? null,
-        after: input.after ?? null,
+        after: enrichedAfter ?? null,
       })
       .returning({ id: activityEvents.id });
 

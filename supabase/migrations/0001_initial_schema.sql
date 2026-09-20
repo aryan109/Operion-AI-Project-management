@@ -204,7 +204,7 @@ CREATE TABLE IF NOT EXISTS activity_events (
   actor_user_id UUID REFERENCES profiles(id),
   actor_agent_id UUID REFERENCES agent_identities(id),
   entity_type TEXT NOT NULL,
-  entity_id UUID NOT NULL,
+  entity_id TEXT NOT NULL,
   action TEXT NOT NULL,
   before JSONB,
   after JSONB,

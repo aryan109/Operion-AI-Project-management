@@ -210,7 +210,21 @@ All updates, changes, and new files created across the development phases of the
   - **Build & Asset Distribution Hardening**:
     * Updated `.gitignore` to only ignore root `/dist/` while allowing `!public/dist/` so `public/dist/operion.mcpb` is tracked and served by Vercel.
     * Ignored raw `*.csv` data exports.
-
-
-
-
+- **Supabase PostgreSQL Logs Audit & Error Resolution**:
+  - **Error 1 Resolution (`42883: function my_database_function() does not exist`)**:
+    * Diagnosed 60 recurring error occurrences (once every minute) in PostgreSQL logs.
+    * Inspected `cron.job` table via direct database query and discovered 2 orphaned test jobs created from the Supabase pg_cron documentation example: Job ID 1 (`test 1`) running daily at midnight, and Job ID 2 (`my-job-name`) executing `SELECT my_database_function();` every minute.
+    * Unscheduled and purged both orphaned jobs using `SELECT cron.unschedule('test 1')` and `SELECT cron.unschedule('my-job-name')`.
+    * Verified `cron.job` active jobs count is now **0**, eliminating all recurring 42883 errors. (Actual project cron jobs run via Next.js `/api/cron/*` routes on Vercel Cron).
+  - **Error 2 Resolution (`22P02: invalid input syntax for type uuid: "<toolName>"`)**:
+    * Diagnosed 79 occurrences in PostgreSQL logs across 12 distinct MCP tool names (`createTask`, `createMilestone`, `createDependency`, `createWorkstream`, `generatePortfolioReport`, `getProject`, `getWorkspace`, etc.).
+    * Identified root cause in `app/api/mcp/route.ts` where MCP tool invocations write audit trail events via `activity.record(ctx, { entityType: "mcp_tool", entityId: toolName })`, while PostgreSQL column `activity_events.entity_id` was typed strictly as `UUID`.
+    * Applied database migration altering `activity_events.entity_id` from `UUID` to `TEXT` (`ALTER TABLE activity_events ALTER COLUMN entity_id TYPE text;`).
+    * Created Supabase migration file `supabase/migrations/0003_activity_events_text_entity_id.sql`.
+    * Updated Drizzle ORM definition in `lib/db/schema.ts` (`entityId: text("entity_id").notNull()`) and initial schema in `supabase/migrations/0001_initial_schema.sql`.
+    * Hardened `lib/domain/activity.service.ts` with `isUuid()` guards on `actorUserId` and `actorAgentId`, ensuring non-UUID actor identifiers (e.g. `"cron-reporter"` or `"api-key-..."`) safely persist in audit metadata rather than violating UUID column types.
+    * Enhanced `app/api/mcp/route.ts` audit payload to capture structured execution results and return entity summaries.
+  - **End-to-End Verification & Zero-Downtime Validation**:
+    * Verified direct `mcp_tool` activity event insertion with string `entityId: 'createTask'` succeeded with 0 errors.
+    * Executed full automated end-to-end test suite (`npm.cmd run test:e2e`): **31 out of 31 tests passing (0 failures)** across all 7 suites.
+    * Executed Next.js production build (`npm.cmd run build`): All 36 routes compiled successfully.

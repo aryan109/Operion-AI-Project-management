@@ -94,7 +94,13 @@ export async function POST(req: NextRequest) {
         entityType: "mcp_tool",
         entityId: toolName,
         action: "executed",
-        after: { arguments: args },
+        after: {
+          arguments: args,
+          resultSummary:
+            typeof data === "object" && data !== null
+              ? { id: (data as any).id, name: (data as any).name || (data as any).title }
+              : undefined,
+        },
       });
 
       return NextResponse.json({
