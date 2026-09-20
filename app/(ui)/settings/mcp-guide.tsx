@@ -119,7 +119,7 @@ ${chatgptOpenApiUrl}
   };
 
   return (
-    <div className="glass-panel p-6 rounded-2xl border border-indigo-500/30 bg-indigo-950/10 space-y-5">
+    <div className="glass-panel p-4 sm:p-6 rounded-2xl border border-indigo-500/30 bg-indigo-950/10 space-y-4 sm:space-y-5">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-500/20 pb-4">
         <div>
@@ -136,10 +136,10 @@ ${chatgptOpenApiUrl}
         </div>
 
         {/* Environment Selector */}
-        <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-900 border border-slate-800 self-start sm:self-auto">
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-900 border border-slate-800 w-full sm:w-auto overflow-x-auto scrollbar-none flex-nowrap shrink-0">
           <button
             onClick={() => setEnvironment("hosted")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
               environment === "hosted"
                 ? "bg-indigo-600 text-white shadow-sm"
                 : "text-slate-400 hover:text-slate-200"
@@ -150,7 +150,7 @@ ${chatgptOpenApiUrl}
           </button>
           <button
             onClick={() => setEnvironment("local")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap ${
               environment === "local"
                 ? "bg-indigo-600 text-white shadow-sm"
                 : "text-slate-400 hover:text-slate-200"
@@ -164,9 +164,9 @@ ${chatgptOpenApiUrl}
 
       {/* Target Server Endpoint Indicator */}
       <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs">
-        <div className="flex items-center gap-2">
-          <span className="text-slate-400 font-medium">Server Endpoint:</span>
-          <code className="font-mono text-cyan-300 bg-slate-950 px-2 py-0.5 rounded border border-slate-800 break-all">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-slate-400 font-medium shrink-0">Server Endpoint:</span>
+          <code className="font-mono text-cyan-300 bg-slate-950 px-2 py-0.5 rounded border border-slate-800 break-all text-[11px]">
             {activeUrl}
           </code>
         </div>
@@ -178,12 +178,12 @@ ${chatgptOpenApiUrl}
         </div>
       </div>
 
-      {/* Client Platform Selector Tabs */}
-      <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
-        <div className="flex items-center gap-2">
+      {/* Client Platform Selector Tabs (scrollable on mobile) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-2">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-nowrap pb-1 sm:pb-0">
           <button
             onClick={() => setClientTab("claude")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
               clientTab === "claude"
                 ? "bg-purple-600/20 text-purple-300 border border-purple-500/40"
                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
@@ -193,7 +193,7 @@ ${chatgptOpenApiUrl}
           </button>
           <button
             onClick={() => setClientTab("gemini")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
               clientTab === "gemini"
                 ? "bg-blue-600/20 text-blue-300 border border-blue-500/40"
                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
@@ -203,7 +203,7 @@ ${chatgptOpenApiUrl}
           </button>
           <button
             onClick={() => setClientTab("chatgpt")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
               clientTab === "chatgpt"
                 ? "bg-emerald-600/20 text-emerald-300 border border-emerald-500/40"
                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
@@ -215,7 +215,7 @@ ${chatgptOpenApiUrl}
 
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition"
+          className="self-end sm:self-auto shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition"
         >
           {copied ? (
             <>

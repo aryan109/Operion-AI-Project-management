@@ -27,7 +27,7 @@ export default async function ReportsPage() {
       </div>
 
       {/* 1. DAILY REPORT */}
-      <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-5">
+      <div className="glass-panel p-4 sm:p-6 rounded-2xl border border-slate-800 space-y-4 sm:space-y-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm">
             <Sparkles className="w-4 h-4" />
@@ -38,11 +38,11 @@ export default async function ReportsPage() {
           </span>
         </div>
 
-        <p className="text-sm text-slate-300 leading-relaxed bg-slate-900/60 p-4 rounded-xl border border-slate-800/80">
+        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed bg-slate-900/60 p-3.5 sm:p-4 rounded-xl border border-slate-800/80">
           {daily.summary}
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 text-xs">
           <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
             <p className="text-slate-400">Blocked Items</p>
             <p className="text-lg font-bold text-rose-400 mt-0.5">{daily.blockedTasks?.length || 0}</p>
@@ -59,7 +59,7 @@ export default async function ReportsPage() {
       </div>
 
       {/* 2. PORTFOLIO REPORT */}
-      <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-5">
+      <div className="glass-panel p-4 sm:p-6 rounded-2xl border border-slate-800 space-y-4 sm:space-y-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-cyan-400 font-bold text-sm">
             <CheckCircle2 className="w-4 h-4" />

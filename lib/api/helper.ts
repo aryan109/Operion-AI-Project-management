@@ -53,7 +53,15 @@ export async function authenticateRequest(
   return { ok: true, data: defaultCtx };
 }
 
+let cachedDefaultContext: { context: Context; expiresAt: number } | null = null;
+const CONTEXT_CACHE_TTL_MS = 60 * 1000; // 60 seconds cache
+
 export async function getDefaultContext(): Promise<Context> {
+  const now = Date.now();
+  if (cachedDefaultContext && now < cachedDefaultContext.expiresAt) {
+    return cachedDefaultContext.context;
+  }
+
   // First, check for the flagship Operion organization
   const [operionOrg] = await db
     .select({ id: organizations.id })
@@ -62,7 +70,7 @@ export async function getDefaultContext(): Promise<Context> {
     .limit(1);
 
   if (operionOrg) {
-    return {
+    const ctx: Context = {
       organizationId: operionOrg.id,
       actor: {
         type: "user",
@@ -70,6 +78,8 @@ export async function getDefaultContext(): Promise<Context> {
         role: "owner",
       },
     };
+    cachedDefaultContext = { context: ctx, expiresAt: now + CONTEXT_CACHE_TTL_MS };
+    return ctx;
   }
 
   const [defaultOrg] = await db
@@ -78,7 +88,7 @@ export async function getDefaultContext(): Promise<Context> {
     .orderBy(desc(organizations.createdAt))
     .limit(1);
 
-  return {
+  const fallbackCtx: Context = {
     organizationId: defaultOrg?.id || "00000000-0000-0000-0000-000000000001",
     actor: {
       type: "user",
@@ -86,6 +96,8 @@ export async function getDefaultContext(): Promise<Context> {
       role: "owner",
     },
   };
+  cachedDefaultContext = { context: fallbackCtx, expiresAt: now + CONTEXT_CACHE_TTL_MS };
+  return fallbackCtx;
 }
 
 export function handleResult<T>(result: Result<T>, statusOnSuccess: number = 200) {

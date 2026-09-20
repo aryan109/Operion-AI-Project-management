@@ -264,7 +264,7 @@ export function ConnectorsClient({
               </div>
             </div>
 
-            <div className="flex items-center gap-2 pt-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-2">
               <a
                 href="https://chatgpt.com/gpts/editor"
                 target="_blank"

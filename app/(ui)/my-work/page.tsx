@@ -24,21 +24,22 @@ export default async function MyWorkPage() {
 
       {/* 1. OVERDUE ALERT */}
       {work.overdue.length > 0 && (
-        <div className="p-5 rounded-2xl bg-rose-950/20 border border-rose-500/30">
+        <div className="p-4 sm:p-5 rounded-2xl bg-rose-950/20 border border-rose-500/30">
           <h2 className="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-2 mb-3">
             <ShieldAlert className="w-4 h-4" />
             Overdue Deliverables ({work.overdue.length})
           </h2>
           <div className="space-y-2">
             {work.overdue.map((t: any) => (
-              <div key={t.id} className="p-3 rounded-xl bg-slate-900 border border-rose-900/50 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-white">{t.title}</p>
-                  <p className="text-xs text-slate-400">{t.projectName} • Due {t.dueDate}</p>
+              <div key={t.id} className="p-3 rounded-xl bg-slate-900 border border-rose-900/50 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-white truncate">{t.title}</p>
+                  <p className="text-xs text-slate-400 truncate">{t.projectName} • Due {t.dueDate}</p>
                 </div>
                 <Link
                   href={`/projects/${t.projectId}`}
-                  className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold"
+                  prefetch={true}
+                  className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold shrink-0"
                 >
                   View Project
                 </Link>
@@ -49,7 +50,7 @@ export default async function MyWorkPage() {
       )}
 
       {/* 2. TODAY'S COMMITTED DELIVERABLES */}
-      <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
+      <div className="glass-panel p-4 sm:p-6 rounded-2xl border border-slate-800 space-y-4">
         <h2 className="text-base font-bold text-white flex items-center gap-2">
           <Clock className="w-4 h-4 text-cyan-400" />
           Due Today ({work.today.length})

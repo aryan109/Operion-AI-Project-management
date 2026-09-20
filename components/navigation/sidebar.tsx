@@ -28,10 +28,10 @@ export function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 border-r border-slate-800/80 bg-[#0a0e17]/95 flex flex-col justify-between py-5 px-3 min-h-screen sticky top-0">
+    <aside className="w-64 border-r border-slate-800/80 bg-[#0a0e17]/95 hidden md:flex flex-col justify-between py-5 px-3 min-h-screen sticky top-0 shrink-0">
       <div>
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-3 px-3 py-2 mb-6">
+        <Link href="/" prefetch={true} className="flex items-center gap-3 px-3 py-2 mb-6">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/25">
             <Sparkles className="w-5 h-5 text-white" />
           </div>
@@ -59,6 +59,7 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
                 className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all duration-150 ${
                   isActive
                     ? "bg-indigo-600/15 text-indigo-400 border border-indigo-500/30 font-semibold shadow-sm shadow-indigo-500/10"

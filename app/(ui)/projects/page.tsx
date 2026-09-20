@@ -60,17 +60,18 @@ export default async function ProjectsPage({
           </p>
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900 border border-slate-800 text-xs">
-            <span className="text-slate-400 px-2 flex items-center gap-1">
+        {/* Filter Pills (scrollable on mobile) */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 w-full sm:w-auto">
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900 border border-slate-800 text-xs overflow-x-auto scrollbar-none flex-nowrap shrink-0">
+            <span className="text-slate-400 px-2 flex items-center gap-1 shrink-0">
               <Filter className="w-3 h-3" /> Status:
             </span>
             {statuses.map((s) => (
               <Link
                 key={s.label}
                 href={`/projects?${s.value ? `status=${s.value}` : ""}${params.health ? `&health=${params.health}` : ""}`}
-                className={`px-2.5 py-1 rounded-lg transition font-medium ${
+                prefetch={true}
+                className={`px-2.5 py-1 rounded-lg transition font-medium whitespace-nowrap shrink-0 ${
                   (params.status || "") === s.value
                     ? "bg-indigo-600 text-white shadow-sm"
                     : "text-slate-400 hover:text-white"
@@ -81,13 +82,14 @@ export default async function ProjectsPage({
             ))}
           </div>
 
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900 border border-slate-800 text-xs">
-            <span className="text-slate-400 px-2 flex items-center gap-1">Health:</span>
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900 border border-slate-800 text-xs overflow-x-auto scrollbar-none flex-nowrap shrink-0">
+            <span className="text-slate-400 px-2 flex items-center gap-1 shrink-0">Health:</span>
             {healthFilters.map((h) => (
               <Link
                 key={h.label}
                 href={`/projects?${params.status ? `status=${params.status}&` : ""}${h.value ? `health=${h.value}` : ""}`}
-                className={`px-2.5 py-1 rounded-lg transition font-medium ${
+                prefetch={true}
+                className={`px-2.5 py-1 rounded-lg transition font-medium whitespace-nowrap shrink-0 ${
                   (params.health || "") === h.value
                     ? "bg-indigo-600 text-white shadow-sm"
                     : "text-slate-400 hover:text-white"
@@ -102,13 +104,13 @@ export default async function ProjectsPage({
 
       {/* Projects Grid */}
       {projects.length === 0 ? (
-        <div className="glass-panel p-12 text-center rounded-2xl border border-slate-800">
-          <FolderKanban className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+        <div className="glass-panel p-8 sm:p-12 text-center rounded-2xl border border-slate-800">
+          <FolderKanban className="w-10 h-10 sm:w-12 sm:h-12 text-slate-600 mx-auto mb-3" />
           <p className="text-base font-semibold text-white">No projects match the selected filters</p>
           <p className="text-xs text-slate-400 mt-1">Create a new project or reset your filters.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {projects.map((p: any) => {
             const healthBadge =
               p.health === "blocked"
@@ -121,7 +123,8 @@ export default async function ProjectsPage({
               <Link
                 key={p.id}
                 href={`/projects/${p.id}`}
-                className="glass-card p-6 rounded-2xl border border-slate-800/80 flex flex-col justify-between group"
+                prefetch={true}
+                className="glass-card p-4 sm:p-6 rounded-2xl border border-slate-800/80 flex flex-col justify-between group"
               >
                 <div>
                   {/* Top Badges */}

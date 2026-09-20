@@ -126,8 +126,8 @@ export function CommandBar({ isOpen, onClose }: CommandBarProps) {
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-start justify-center pt-24 px-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-2xl bg-[#0f1420] border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-start justify-center pt-4 sm:pt-20 px-3 sm:px-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-2xl bg-[#0f1420] border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
         {/* Input Bar */}
         <div className="flex items-center px-4 py-3.5 border-b border-slate-800 bg-slate-900/50">
           <Sparkles className="w-5 h-5 text-indigo-400 mr-3" />

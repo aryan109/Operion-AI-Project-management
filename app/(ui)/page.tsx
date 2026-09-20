@@ -35,78 +35,79 @@ export default async function HomePage() {
   const blockedCount = projects.filter((p) => p.health === "blocked").length;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-12">
+    <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-12">
       {/* Hero Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-r from-indigo-950/60 via-[#0e1424] to-[#07090e] border border-indigo-500/20 shadow-2xl">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-5 sm:p-8 bg-gradient-to-r from-indigo-950/60 via-[#0e1424] to-[#07090e] border border-indigo-500/20 shadow-2xl">
         <div className="relative z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-semibold mb-4">
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-[11px] sm:text-xs font-semibold mb-3 sm:mb-4">
             <Sparkles className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
             AI-Native Project Operating System
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl mb-3">
+          <h1 className="text-2xl font-extrabold tracking-tight text-white sm:text-4xl mb-2 sm:mb-3">
             Welcome to <span className="bg-gradient-to-r from-indigo-400 via-purple-300 to-cyan-400 bg-clip-text text-transparent">Operion</span>
           </h1>
-          <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
+          <p className="text-slate-400 text-xs sm:text-base leading-relaxed">
             The UI gives you visibility into every deliverable. Connect your AI agents to our MCP Server to autonomously plan, execute, and steer projects.
           </p>
         </div>
         <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-indigo-600/10 to-transparent pointer-events-none" />
       </div>
 
-      {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="glass-card p-5 rounded-2xl border border-slate-800 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-            <FolderKanban className="w-6 h-6" />
+      {/* Metrics Row (2 columns on mobile, 4 on desktop) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+        <div className="glass-card p-3.5 sm:p-5 rounded-2xl border border-slate-800 flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+            <FolderKanban className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active Projects</p>
-            <p className="text-2xl font-bold text-white mt-0.5">{projects.length}</p>
-          </div>
-        </div>
-
-        <div className="glass-card p-5 rounded-2xl border border-slate-800 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-            <CheckCircle2 className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">On Track</p>
-            <p className="text-2xl font-bold text-emerald-400 mt-0.5">{onTrackCount}</p>
+          <div className="min-w-0">
+            <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider truncate">Active Projects</p>
+            <p className="text-xl sm:text-2xl font-bold text-white mt-0.5">{projects.length}</p>
           </div>
         </div>
 
-        <div className="glass-card p-5 rounded-2xl border border-slate-800 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-            <AlertTriangle className="w-6 h-6" />
+        <div className="glass-card p-3.5 sm:p-5 rounded-2xl border border-slate-800 flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+            <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">At Risk</p>
-            <p className="text-2xl font-bold text-amber-400 mt-0.5">{atRiskCount}</p>
+          <div className="min-w-0">
+            <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider truncate">On Track</p>
+            <p className="text-xl sm:text-2xl font-bold text-emerald-400 mt-0.5">{onTrackCount}</p>
           </div>
         </div>
 
-        <div className="glass-card p-5 rounded-2xl border border-slate-800 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
-            <Clock className="w-6 h-6" />
+        <div className="glass-card p-3.5 sm:p-5 rounded-2xl border border-slate-800 flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+            <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Critical Blockers</p>
-            <p className="text-2xl font-bold text-rose-400 mt-0.5">{blockedCount + today.blocked.length}</p>
+          <div className="min-w-0">
+            <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider truncate">At Risk</p>
+            <p className="text-xl sm:text-2xl font-bold text-amber-400 mt-0.5">{atRiskCount}</p>
+          </div>
+        </div>
+
+        <div className="glass-card p-3.5 sm:p-5 rounded-2xl border border-slate-800 flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
+            <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider truncate">Blockers</p>
+            <p className="text-xl sm:text-2xl font-bold text-rose-400 mt-0.5">{blockedCount + today.blocked.length}</p>
           </div>
         </div>
       </div>
 
       {/* Main Grid: Projects & Today's Cockpit */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         {/* Left 2 Cols: Active Projects Portfolio */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Layers className="w-5 h-5 text-indigo-400" />
+            <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+              <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400" />
               Active Project Portfolio
             </h2>
             <Link
               href="/projects"
+              prefetch={true}
               className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition"
             >
               View all ({projects.length}) <ArrowRight className="w-3.5 h-3.5" />
@@ -126,7 +127,8 @@ export default async function HomePage() {
                 <Link
                   key={proj.id}
                   href={`/projects/${proj.id}`}
-                  className="glass-card p-5 rounded-2xl border border-slate-800/80 flex flex-col justify-between group"
+                  prefetch={true}
+                  className="glass-card p-4 sm:p-5 rounded-2xl border border-slate-800/80 flex flex-col justify-between group"
                 >
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-2">
@@ -188,7 +190,7 @@ export default async function HomePage() {
                 <Clock className="w-4 h-4 text-cyan-400" />
                 Today's Focus
               </h3>
-              <Link href="/today" className="text-xs text-cyan-400 hover:underline">
+              <Link href="/today" prefetch={true} className="text-xs text-cyan-400 hover:underline">
                 View all
               </Link>
             </div>

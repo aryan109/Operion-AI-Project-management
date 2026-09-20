@@ -22,28 +22,28 @@ export default async function TodayPage() {
         </p>
       </div>
 
-      {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800">
-          <p className="text-xs text-slate-400 uppercase font-semibold">Due Today</p>
-          <p className="text-2xl font-bold text-cyan-400 mt-1">{data.dueToday.length}</p>
+      {/* Metrics Row (2 cols on mobile, 4 on desktop) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-900 border border-slate-800">
+          <p className="text-[10px] sm:text-xs text-slate-400 uppercase font-semibold">Due Today</p>
+          <p className="text-xl sm:text-2xl font-bold text-cyan-400 mt-1">{data.dueToday.length}</p>
         </div>
-        <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800">
-          <p className="text-xs text-slate-400 uppercase font-semibold">Overdue</p>
-          <p className="text-2xl font-bold text-rose-400 mt-1">{data.overdue.length}</p>
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-900 border border-slate-800">
+          <p className="text-[10px] sm:text-xs text-slate-400 uppercase font-semibold">Overdue</p>
+          <p className="text-xl sm:text-2xl font-bold text-rose-400 mt-1">{data.overdue.length}</p>
         </div>
-        <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800">
-          <p className="text-xs text-slate-400 uppercase font-semibold">Blocked</p>
-          <p className="text-2xl font-bold text-amber-400 mt-1">{data.blocked.length}</p>
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-900 border border-slate-800">
+          <p className="text-[10px] sm:text-xs text-slate-400 uppercase font-semibold">Blocked</p>
+          <p className="text-xl sm:text-2xl font-bold text-amber-400 mt-1">{data.blocked.length}</p>
         </div>
-        <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800">
-          <p className="text-xs text-slate-400 uppercase font-semibold">Total Active</p>
-          <p className="text-2xl font-bold text-white mt-1">{data.totalPending}</p>
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-900 border border-slate-800">
+          <p className="text-[10px] sm:text-xs text-slate-400 uppercase font-semibold">Total Active</p>
+          <p className="text-xl sm:text-2xl font-bold text-white mt-1">{data.totalPending}</p>
         </div>
       </div>
 
       {/* 1. DUE TODAY */}
-      <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
+      <div className="glass-panel p-4 sm:p-6 rounded-2xl border border-slate-800 space-y-4">
         <h2 className="text-base font-bold text-white flex items-center gap-2">
           <Clock className="w-4 h-4 text-cyan-400" />
           Deliverables Due Today ({data.dueToday.length})
@@ -53,14 +53,15 @@ export default async function TodayPage() {
         ) : (
           <div className="space-y-2">
             {data.dueToday.map((t: any) => (
-              <div key={t.id} className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-white">{t.title}</p>
-                  <p className="text-xs text-slate-400">{t.projectName}</p>
+              <div key={t.id} className="p-3 sm:p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-white truncate">{t.title}</p>
+                  <p className="text-xs text-slate-400 truncate">{t.projectName}</p>
                 </div>
                 <Link
                   href={`/projects/${t.projectId}`}
-                  className="text-xs text-cyan-400 hover:text-cyan-300 font-semibold"
+                  prefetch={true}
+                  className="text-xs text-cyan-400 hover:text-cyan-300 font-semibold shrink-0"
                 >
                   View
                 </Link>
