@@ -1,0 +1,39 @@
+{
+  "manifest_version": "1.0",
+  "name": "operion",
+  "display_name": "Operion AI-Native Project Management",
+  "version": "1.0.0",
+  "description": "Autonomous project management operating system with 31 tools for projects, workstreams, milestones, tasks, and dependency health.",
+  "author": {
+    "name": "Operion AI",
+    "url": "https://operion-ai-project-management.vercel.app"
+  },
+  "icon": "icon.png",
+  "server": {
+    "type": "stdio",
+    "command": "node",
+    "args": ["bridge.mjs"]
+  },
+  "tools_count": 31,
+  "resources_count": 4,
+  "configuration": {
+    "properties": {
+      "workspaceId": {
+        "type": "string",
+        "title": "Workspace ID (Optional)",
+        "description": "Custom Operion Organization ID. Defaults to Flagship Operion HQ.",
+        "default": "adf9eb9c-f483-4d66-9433-a91b7d34ce39"
+      },
+      "apiKey": {
+        "type": "string",
+        "title": "Operion API Key (Optional)",
+        "description": "Generated under Settings > API Keys for External Agents in your Operion workspace."
+      },
+      "serverUrl": {
+        "type": "string",
+        "title": "Remote Server URL",
+        "default": "https://operion-ai-project-management.vercel.app/api/mcp"
+      }
+    }
+  }
+}

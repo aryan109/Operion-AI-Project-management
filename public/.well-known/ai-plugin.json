@@ -1,0 +1,21 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Operion Project Management",
+  "name_for_model": "operion",
+  "description_for_human": "AI-native project management operating system with 31 tools for projects, workstreams, milestones, tasks, and blocker detection.",
+  "description_for_model": "Manage projects, workstreams, milestones, tasks, dependencies, and portfolio health in Operion. Use this plugin to inspect active projects, schedule tasks, query blocker graphs, and generate executive summaries.",
+  "auth": {
+    "type": "service_http",
+    "authorization_type": "bearer",
+    "verification_tokens": {
+      "openai": "operion_verification_token"
+    }
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://operion-ai-project-management.vercel.app/api/v1/openapi.json"
+  },
+  "logo_url": "https://operion-ai-project-management.vercel.app/icon.png",
+  "contact_email": "support@operion.ai",
+  "legal_info_url": "https://operion-ai-project-management.vercel.app"
+}

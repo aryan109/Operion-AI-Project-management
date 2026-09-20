@@ -11,6 +11,7 @@ import {
   Settings,
   FileText,
   ShieldCheck,
+  Plug,
 } from "lucide-react";
 
 export function Sidebar() {
@@ -22,6 +23,7 @@ export function Sidebar() {
     { label: "My Work", href: "/my-work", icon: CheckSquare },
     { label: "Today", href: "/today", icon: Calendar },
     { label: "Reports", href: "/reports", icon: FileText },
+    { label: "Connectors", href: "/connectors", icon: Plug },
     { label: "Settings & API", href: "/settings", icon: Settings },
   ];
 

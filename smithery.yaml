@@ -1,0 +1,22 @@
+# Smithery MCP Server Configuration
+# https://smithery.ai/docs/config
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties:
+      workspaceId:
+        type: string
+        description: "Operion Organization / Workspace ID"
+        default: "adf9eb9c-f483-4d66-9433-a91b7d34ce39"
+      apiKey:
+        type: string
+        description: "Operion API Key generated in Settings > API Keys"
+        sensitive: true
+      serverUrl:
+        type: string
+        description: "Operion Remote MCP Server URL"
+        default: "https://operion-ai-project-management.vercel.app/api/mcp"
+  commandFunction:
+    node:
+      - "scripts/operion-mcp.mjs"
