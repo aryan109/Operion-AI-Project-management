@@ -105,14 +105,15 @@ async function runAllTests() {
     priority: "medium",
     status: "todo",
   });
-  assert(subTaskRes.ok && subTaskRes.data.parentTaskId === parentTaskRes.data?.id, "Subtask references parentTaskId properly");
+  assert(subTaskRes.ok && parentTaskRes.ok && subTaskRes.data.parentTaskId === parentTaskRes.data.id, "Subtask references parentTaskId properly");
 
   // Task Status Transitions & CompletedAt Timestamp
-  const completeRes = await taskService.completeTask(ctx, subTaskRes.data.id);
+  const subTaskId = subTaskRes.ok ? subTaskRes.data.id : "";
+  const completeRes = await taskService.completeTask(ctx, subTaskId);
   assert(completeRes.ok && completeRes.data.status === "done" && !!completeRes.data.completedAt, "completeTask() marks status 'done' and sets completedAt timestamp");
 
   // Reopen Task & Clear CompletedAt
-  const reopenRes = await taskService.changeTaskStatus(ctx, subTaskRes.data.id, "in_progress");
+  const reopenRes = await taskService.changeTaskStatus(ctx, subTaskId, "in_progress");
   assert(reopenRes.ok && reopenRes.data.status === "in_progress" && !reopenRes.data.completedAt, "Reopening task clears completedAt timestamp");
 
   // Custom Properties Abuse Prevention (spec §24, max 20 keys)
@@ -130,10 +131,18 @@ async function runAllTests() {
   // -------------------------------------------------------------
   console.log("\n[SUITE 3] Dependency Engine & DFS Cycle Detection (Spec §22)");
 
-  const taskA = (await taskService.createTask(ctx, { projectId: testProject.id, title: "Graph Node A" })).data;
-  const taskB = (await taskService.createTask(ctx, { projectId: testProject.id, title: "Graph Node B" })).data;
-  const taskC = (await taskService.createTask(ctx, { projectId: testProject.id, title: "Graph Node C" })).data;
-  const taskD = (await taskService.createTask(ctx, { projectId: testProject.id, title: "Graph Node D" })).data;
+  const resA = await taskService.createTask(ctx, { projectId: testProject.id, title: "Graph Node A" });
+  const resB = await taskService.createTask(ctx, { projectId: testProject.id, title: "Graph Node B" });
+  const resC = await taskService.createTask(ctx, { projectId: testProject.id, title: "Graph Node C" });
+  const resD = await taskService.createTask(ctx, { projectId: testProject.id, title: "Graph Node D" });
+
+  assert(resA.ok && resB.ok && resC.ok && resD.ok, "All 4 DAG test tasks created successfully");
+  if (!resA.ok || !resB.ok || !resC.ok || !resD.ok) return;
+
+  const taskA = resA.data;
+  const taskB = resB.data;
+  const taskC = resC.data;
+  const taskD = resD.data;
 
   // A -> B -> C -> D
   const dep1 = await dependencyService.createDependency(ctx, { blockingTaskId: taskA.id, blockedTaskId: taskB.id });
