@@ -146,3 +146,5 @@ All updates, changes, and new files created across the development phases of the
   - Updated task `Deploy codebase to GitHub remote and link Vercel production hosting` (`62fdfe9d-cbde-40f6-8e98-8b14ffc07077`) to status `done` with `completed_at` timestamp in the live database.
   - Marked Milestone 8 (`Production Deployment & Readiness`) as `completed`.
   - Updated Operion flagship project health reason to reflect all 15/15 deliverables completed and active production hosting.
+- Serverless Dynamic Route Optimization:
+  - Added `export const dynamic = "force-dynamic"` to `/api/v1/projects`, `/api/v1/tasks`, and `/api/v1/workspace` route handlers to prevent Next.js from caching dynamic database responses in serverless environments.

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { authenticateRequest, handleResult } from "@/lib/api/helper";
 import * as taskService from "@/lib/domain/task.service";
 import { createTaskSchema } from "@/lib/validation";
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   const auth = await authenticateRequest(req);

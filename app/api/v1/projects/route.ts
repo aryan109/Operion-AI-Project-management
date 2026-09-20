@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { authenticateRequest, handleResult } from "@/lib/api/helper";
 import * as projectService from "@/lib/domain/project.service";
 import { createProjectSchema } from "@/lib/validation";
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   const auth = await authenticateRequest(req);
