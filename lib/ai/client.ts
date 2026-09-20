@@ -15,48 +15,82 @@ export interface AIClient {
 
 /**
  * Universal AI client:
- * Connects to OpenAI, Gemini, Groq, or OpenRouter if keys are provided in env,
+ * Connects to Groq, OpenAI, Gemini, or OpenRouter if keys are provided in env,
  * or provides deterministic heuristic completions when operating offline/without key.
  */
 class UniversalAIClient implements AIClient {
-  private apiKey: string | null = null;
-  private endpoint: string = "https://api.openai.com/v1/chat/completions";
-  private model: string = "gpt-4o-mini";
-
-  constructor() {
-    if (process.env.OPENAI_API_KEY) {
-      this.apiKey = process.env.OPENAI_API_KEY;
-      this.model = "gpt-4o-mini";
-    } else if (process.env.GROQ_API_KEY) {
-      this.apiKey = process.env.GROQ_API_KEY;
-      this.endpoint = "https://api.groq.com/openai/v1/chat/completions";
-      this.model = "llama-3.3-70b-versatile";
-    } else if (process.env.GEMINI_API_KEY) {
-      this.apiKey = process.env.GEMINI_API_KEY;
-      this.endpoint = `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`;
-      this.model = "gemini-1.5-flash";
+  getProviderInfo(): { provider: string; model: string; isConfigured: boolean } {
+    const groqKey = process.env.GROQ_API_KEY || process.env["groq API"];
+    if (groqKey) {
+      return {
+        provider: "Groq",
+        model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
+        isConfigured: true,
+      };
     }
+    if (process.env.OPENAI_API_KEY) {
+      return { provider: "OpenAI", model: "gpt-4o-mini", isConfigured: true };
+    }
+    if (process.env.GEMINI_API_KEY) {
+      return { provider: "Gemini", model: "gemini-1.5-flash", isConfigured: true };
+    }
+    return { provider: "Deterministic Engine", model: "offline-fallback", isConfigured: false };
+  }
+
+  private resolveConfig(): { apiKey: string | null; endpoint: string; model: string } {
+    const groqKey = process.env.GROQ_API_KEY || process.env["groq API"];
+    if (groqKey) {
+      return {
+        apiKey: groqKey,
+        endpoint: "https://api.groq.com/openai/v1/chat/completions",
+        model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
+      };
+    }
+    if (process.env.OPENAI_API_KEY) {
+      return {
+        apiKey: process.env.OPENAI_API_KEY,
+        endpoint: "https://api.openai.com/v1/chat/completions",
+        model: "gpt-4o-mini",
+      };
+    }
+    if (process.env.GEMINI_API_KEY) {
+      return {
+        apiKey: process.env.GEMINI_API_KEY,
+        endpoint: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+        model: "gemini-1.5-flash",
+      };
+    }
+    return {
+      apiKey: null,
+      endpoint: "https://api.openai.com/v1/chat/completions",
+      model: "offline-fallback",
+    };
   }
 
   async complete(prompt: string, options?: Partial<AICompletionOptions>): Promise<string> {
-    if (!this.apiKey) {
+    const config = this.resolveConfig();
+    if (!config.apiKey) {
       return this.fallbackComplete(prompt);
     }
 
     try {
       const messages = options?.messages || [
-        { role: "system", content: "You are Operion AI, an expert autonomous project management operator." },
+        {
+          role: "system",
+          content:
+            "You are Operion AI, an expert autonomous project management operator. Respond directly, accurately, and actionably.",
+        },
         { role: "user", content: prompt },
       ];
 
-      const res = await fetch(this.endpoint, {
+      const res = await fetch(config.endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${config.apiKey}`,
         },
         body: JSON.stringify({
-          model: this.model,
+          model: config.model,
           messages,
           temperature: options?.temperature ?? 0.2,
           ...(options?.responseFormat === "json" ? { response_format: { type: "json_object" } } : {}),
@@ -64,7 +98,9 @@ class UniversalAIClient implements AIClient {
       });
 
       if (!res.ok) {
-        throw new Error(`AI API error: ${res.status} ${await res.text()}`);
+        const errorText = await res.text();
+        console.warn(`AI API error (${res.status}): ${errorText}`);
+        throw new Error(`AI API error: ${res.status} ${errorText}`);
       }
 
       const data = await res.json();
@@ -80,7 +116,7 @@ class UniversalAIClient implements AIClient {
     schemaDescription: string,
     options?: Partial<AICompletionOptions>
   ): Promise<T> {
-    const fullPrompt = `${prompt}\n\nStrict requirement: Output valid JSON matching this schema:\n${schemaDescription}\nReturn ONLY the JSON string. No markdown formatting, no explanations.`;
+    const fullPrompt = `${prompt}\n\nStrict requirement: Output valid JSON matching this schema:\n${schemaDescription}\nReturn ONLY the JSON string. No markdown formatting, no code fences, no explanations.`;
 
     const raw = await this.complete(fullPrompt, {
       ...options,
@@ -88,8 +124,27 @@ class UniversalAIClient implements AIClient {
     });
 
     try {
-      // Strip markdown code fences if present
-      const cleaned = raw.replace(/^```json\s*/, "").replace(/```\s*$/, "").trim();
+      // 1. Strip thinking tags if reasoning model produced them
+      let cleaned = raw.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+
+      // 2. Strip markdown code fences if present
+      cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
+
+      // 3. If still wrapped in extra characters, extract first outer JSON object or array
+      const firstBrace = cleaned.indexOf("{");
+      const firstBracket = cleaned.indexOf("[");
+      if (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
+        const lastBrace = cleaned.lastIndexOf("}");
+        if (lastBrace !== -1) {
+          cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+        }
+      } else if (firstBracket !== -1) {
+        const lastBracket = cleaned.lastIndexOf("]");
+        if (lastBracket !== -1) {
+          cleaned = cleaned.substring(firstBracket, lastBracket + 1);
+        }
+      }
+
       return JSON.parse(cleaned) as T;
     } catch {
       throw new Error(`Failed to parse structured AI output: ${raw}`);

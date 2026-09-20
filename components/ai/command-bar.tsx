@@ -85,14 +85,31 @@ export function CommandBar({ isOpen, onClose }: CommandBarProps) {
           items: blockers,
           message: `Found ${blockers.length} task(s) currently blocked by dependencies.`,
         });
-      } else {
-        // General search or standup report
-        const res = await fetch(`/api/v1/search?q=${encodeURIComponent(textToRun)}`);
+      } else if (lower.startsWith("search:") || lower.startsWith("find:")) {
+        // Explicit search
+        const searchTerm = textToRun.replace(/^(search|find):\s*/i, "");
+        const res = await fetch(`/api/v1/search?q=${encodeURIComponent(searchTerm)}`);
         const data = await res.json();
         setResult({
           type: "search",
           data,
           message: `Found ${data.projects?.length || 0} projects, ${data.tasks?.length || 0} tasks.`,
+        });
+      } else {
+        // Conversational AI Assistant powered by Groq
+        const res = await fetch("/api/v1/ai/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: textToRun }),
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || "Failed to generate AI response");
+        setResult({
+          type: "ai_chat",
+          answer: data.answer,
+          provider: data.provider,
+          model: data.model,
+          message: `Operion AI (${data.provider} · ${data.model})`,
         });
       }
     } catch (err: any) {
@@ -105,7 +122,7 @@ export function CommandBar({ isOpen, onClose }: CommandBarProps) {
   const suggestions = [
     "Plan a project for Launching an AI Search Engine",
     "What tasks are currently blocked across all active projects?",
-    "Plan a project for Mobile App Redesign & Performance Optimization",
+    "Suggest priority focus areas for this week's milestone",
   ];
 
   return (
@@ -171,6 +188,12 @@ export function CommandBar({ isOpen, onClose }: CommandBarProps) {
               <span>{result.message}</span>
             </div>
 
+            {result.type === "ai_chat" && (
+              <div className="p-3.5 rounded-xl bg-slate-950/80 border border-indigo-500/20 text-xs text-slate-200 leading-relaxed space-y-2 whitespace-pre-wrap max-h-72 overflow-y-auto">
+                {result.answer}
+              </div>
+            )}
+
             {result.projectId && (
               <button
                 onClick={() => {
@@ -203,6 +226,19 @@ export function CommandBar({ isOpen, onClose }: CommandBarProps) {
             <span>{error}</span>
           </div>
         )}
+
+        {/* Footer info */}
+        <div className="px-4 py-2 border-t border-slate-800/80 bg-slate-950/60 flex items-center justify-between text-[11px] text-slate-400">
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>AI Provider: <strong className="text-slate-200">Groq</strong> (openai/gpt-oss-120b)</span>
+          </div>
+          <div className="flex items-center gap-2 font-mono text-[10px] text-slate-400">
+            <span>Esc to close</span>
+            <span>•</span>
+            <span>Enter to run</span>
+          </div>
+        </div>
       </div>
     </div>
   );
