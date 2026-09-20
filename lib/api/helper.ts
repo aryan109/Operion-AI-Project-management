@@ -3,7 +3,7 @@ import { Context, Result } from "../domain/context";
 import * as apiKeyService from "../domain/api-key.service";
 import { db } from "../db/client";
 import { organizations } from "../db/schema";
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 export async function authenticateRequest(
   req: NextRequest
@@ -54,6 +54,24 @@ export async function authenticateRequest(
 }
 
 export async function getDefaultContext(): Promise<Context> {
+  // First, check for the flagship Operion organization
+  const [operionOrg] = await db
+    .select({ id: organizations.id })
+    .from(organizations)
+    .where(eq(organizations.slug, "operion"))
+    .limit(1);
+
+  if (operionOrg) {
+    return {
+      organizationId: operionOrg.id,
+      actor: {
+        type: "user",
+        id: "a0000000-0000-0000-0000-000000000001",
+        role: "owner",
+      },
+    };
+  }
+
   const [defaultOrg] = await db
     .select({ id: organizations.id })
     .from(organizations)

@@ -10,7 +10,9 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "seed": "tsx scripts/seed-benchmark.ts"
+    "seed": "tsx scripts/seed-benchmark.ts",
+    "seed:operion": "tsx scripts/seed-operion.ts",
+    "test:e2e": "tsx scripts/run-e2e-tests.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.6.1",
