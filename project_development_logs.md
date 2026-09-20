@@ -161,4 +161,8 @@ All updates, changes, and new files created across the development phases of the
   - Created `app/api/v1/openapi.json/route.ts`: Serves dynamic OpenAPI 3.1 schema for 1-click import into ChatGPT Custom GPT Action editor with Bearer API Key authentication.
 - Comprehensive Multi-Agent Setup Documentation:
   - Authored `docs/mcp_configuration_guide_gemini_claude_chatgpt.md`: Exhaustive configuration guide with step-by-step setup, configuration JSONs for Claude Desktop (macOS/Windows), Cursor IDE, Antigravity IDE (Gemini), and ChatGPT Custom GPTs.
+- Antigravity IDE MCP Integration & Direct Stdio Bridge:
+  - Created `scripts/operion-mcp.mjs`: Zero-dependency, low-latency Node.js stdio bridge connecting local MCP clients (Antigravity IDE, Claude Desktop, Cursor) directly to the hosted Operion cloud endpoint (`https://operion-ai-project-management.vercel.app/api/mcp`). Verified standard JSON-RPC 2.0 handshake (`initialize`), tool enumeration (`tools/list` returning 31 tools), and live workspace tool execution (`getWorkspace`).
+  - Configured `c:\Users\Aryan\.gemini\config\mcp_config.json`: Added `operion` MCP server definition running `node "e:\Ventures\Operion-AI Project management\scripts\operion-mcp.mjs"`.
+  - Clarified UI search behavior: Documented that the Antigravity "Add MCP Servers" dialog searches community extension registries, whereas custom and hosted servers are registered directly in `mcp_config.json`.
 

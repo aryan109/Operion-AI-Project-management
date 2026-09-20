@@ -94,6 +94,24 @@ Antigravity IDE manages MCP servers in `mcp_config.json`.
 - **Global-level:** `C:\Users\<Username>\.gemini\config\mcp_config.json` (Windows) or `~/.gemini/config/mcp_config.json` (Linux/macOS)
 
 #### 2. Add the Operion server definition:
+
+> **Important Note on Antigravity UI:** In Antigravity IDE, the search bar in **Customizations → Add MCP Servers** is a package catalog search (for searching registry extensions by name like `supabase` or `github`). Custom or hosted MCP servers are added directly to your **`mcp_config.json`** file.
+
+**Recommended Option (Direct Node.js Stdio Bridge):**
+```json
+{
+  "mcpServers": {
+    "operion": {
+      "command": "node",
+      "args": [
+        "e:\\Ventures\\Operion-AI Project management\\scripts\\operion-mcp.mjs"
+      ]
+    }
+  }
+}
+```
+
+**Alternative Option (npx mcp-remote):**
 ```json
 {
   "mcpServers": {
@@ -113,7 +131,8 @@ Antigravity IDE manages MCP servers in `mcp_config.json`.
 }
 ```
 
-Once saved, Gemini agents in Antigravity can immediately run tool calls to create tasks, inspect blockers, and plan projects autonomously.
+Once saved, Gemini agents in Antigravity instantly discover Operion and can run all 31 tools to create tasks, inspect blockers, and plan projects autonomously.
+
 
 ---
 

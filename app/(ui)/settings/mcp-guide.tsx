@@ -64,6 +64,21 @@ export function McpGuide({
     {
       mcpServers: {
         operion: {
+          command: "node",
+          args: [
+            "e:\\Ventures\\Operion-AI Project management\\scripts\\operion-mcp.mjs",
+          ],
+        },
+      },
+    },
+    null,
+    2
+  );
+
+  const geminiNpxConfig = JSON.stringify(
+    {
+      mcpServers: {
+        operion: {
           command: "npx",
           args: [
             "-y",
@@ -80,6 +95,7 @@ export function McpGuide({
     null,
     2
   );
+
 
   // 3. ChatGPT Custom GPT Config Info
   const chatgptOpenApiUrl = `${hostedUrl.replace(/\/$/, "")}/api/v1/openapi.json`;
@@ -233,10 +249,17 @@ ${chatgptOpenApiUrl}
 
           {clientTab === "gemini" && (
             <>
+              <span className="text-blue-400 font-semibold">
+                {`// Google Gemini & Antigravity IDE (Configured in mcp_config.json):\n`}
+              </span>
               <span className="text-slate-400">
-                {`// Google Gemini & Antigravity IDE config (mcp_config.json):\n`}
+                {`// NOTE: In Antigravity, the "Add MCP Servers" search bar queries public registry packages.\n// To connect custom/self-hosted servers, add this entry directly into ~/.gemini/config/mcp_config.json:\n\n`}
               </span>
               {geminiConfig}
+              <span className="text-slate-400">
+                {`\n\n// Alternative using npx runner:\n`}
+              </span>
+              {geminiNpxConfig}
             </>
           )}
 
