@@ -16,8 +16,11 @@ import {
   ChevronRight,
   MoreVertical,
   Check,
+  Edit2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { KanbanBoard } from "@/components/projects/kanban-board";
+import { GanttTimeline } from "@/components/projects/gantt-timeline";
 
 interface ProjectClientProps {
   project: any;
@@ -41,6 +44,8 @@ export function ProjectClient({
   const [tasks, setTasks] = useState(initialTasks);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [isCreatingTask, setIsCreatingTask] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
   const router = useRouter();
 
   const handleStatusChange = async (taskId: string, newStatus: string) => {
@@ -58,6 +63,40 @@ export function ProjectClient({
       router.refresh();
     } catch (err) {
       console.error("Failed to update status", err);
+    }
+  };
+
+  const handlePriorityChange = async (taskId: string, newPriority: string) => {
+    setTasks((prev) =>
+      prev.map((t) => (t.id === taskId ? { ...t, priority: newPriority } : t))
+    );
+
+    try {
+      await fetch(`/api/v1/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ priority: newPriority }),
+      });
+      router.refresh();
+    } catch (err) {
+      console.error("Failed to update priority", err);
+    }
+  };
+
+  const handleTitleChange = async (taskId: string, newTitle: string) => {
+    setTasks((prev) =>
+      prev.map((t) => (t.id === taskId ? { ...t, title: newTitle } : t))
+    );
+
+    try {
+      await fetch(`/api/v1/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newTitle }),
+      });
+      router.refresh();
+    } catch (err) {
+      console.error("Failed to update title", err);
     }
   };
 
@@ -266,10 +305,52 @@ export function ProjectClient({
                           <Check className="w-3.5 h-3.5 stroke-[3]" />
                         </button>
 
-                        <div className="min-w-0">
-                          <p className={`text-sm font-medium ${isDone ? "line-through text-slate-500" : "text-slate-100"}`}>
-                            {task.title}
-                          </p>
+                        <div className="min-w-0 flex-1">
+                          {editingTaskId === task.id ? (
+                            <input
+                              type="text"
+                              value={editingTitle}
+                              autoFocus
+                              onChange={(e) => setEditingTitle(e.target.value)}
+                              onBlur={() => {
+                                if (editingTitle.trim()) handleTitleChange(task.id, editingTitle.trim());
+                                setEditingTaskId(null);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  if (editingTitle.trim()) handleTitleChange(task.id, editingTitle.trim());
+                                  setEditingTaskId(null);
+                                }
+                                if (e.key === "Escape") setEditingTaskId(null);
+                              }}
+                              className="text-sm font-semibold text-white bg-slate-900 px-2 py-1 rounded-lg border border-indigo-500 outline-none w-full max-w-md"
+                            />
+                          ) : (
+                            <div className="flex items-center gap-2 group/title">
+                              <p
+                                onClick={() => {
+                                  setEditingTaskId(task.id);
+                                  setEditingTitle(task.title);
+                                }}
+                                className={`text-sm font-medium cursor-text hover:text-indigo-300 transition ${
+                                  isDone ? "line-through text-slate-500" : "text-slate-100"
+                                }`}
+                                title="Click to rename"
+                              >
+                                {task.title}
+                              </p>
+                              <button
+                                onClick={() => {
+                                  setEditingTaskId(task.id);
+                                  setEditingTitle(task.title);
+                                }}
+                                className="opacity-0 group-hover/title:opacity-100 text-slate-500 hover:text-slate-300 p-0.5 transition"
+                                title="Edit title"
+                              >
+                                <Edit2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          )}
                           {task.description && (
                             <p className="text-xs text-slate-400 truncate mt-0.5">{task.description}</p>
                           )}
@@ -278,10 +359,20 @@ export function ProjectClient({
 
                       {/* Right Meta badges */}
                       <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 text-xs pl-8 sm:pl-0">
-                        {/* Priority */}
-                        <span className={`px-2 py-0.5 rounded-md border text-[10px] font-semibold uppercase ${priorityColors[task.priority as keyof typeof priorityColors] || priorityColors.medium}`}>
+                        {/* Priority - Click to cycle */}
+                        <button
+                          onClick={() => {
+                            const cycle = ["low", "medium", "high", "urgent"];
+                            const nextIdx = (cycle.indexOf(task.priority || "medium") + 1) % cycle.length;
+                            handlePriorityChange(task.id, cycle[nextIdx]);
+                          }}
+                          className={`px-2 py-0.5 rounded-md border text-[10px] font-semibold uppercase cursor-pointer transition ${
+                            priorityColors[task.priority as keyof typeof priorityColors] || priorityColors.medium
+                          }`}
+                          title="Click to cycle priority"
+                        >
                           {task.priority}
-                        </span>
+                        </button>
 
                         {/* Status pill */}
                         <select
@@ -311,55 +402,15 @@ export function ProjectClient({
             </div>
           )}
 
-          {/* VIEW 2: KANBAN BOARD (Swipeable snap columns on mobile) */}
+          {/* VIEW 2: KANBAN BOARD (Interactive Drag-and-Drop) */}
           {taskView === "board" && (
-            <div className="flex md:grid md:grid-cols-5 overflow-x-auto snap-x snap-mandatory gap-3.5 pb-4 scrollbar-none">
-              {[
-                { id: "backlog", label: "Backlog", color: "border-slate-700 text-slate-400" },
-                { id: "todo", label: "To Do", color: "border-blue-500/40 text-blue-400" },
-                { id: "in_progress", label: "In Progress", color: "border-indigo-500/40 text-indigo-400" },
-                { id: "blocked", label: "Blocked", color: "border-rose-500/40 text-rose-400" },
-                { id: "done", label: "Done", color: "border-emerald-500/40 text-emerald-400" },
-              ].map((col) => {
-                const colTasks = tasks.filter((t) => t.status === col.id);
-                return (
-                  <div
-                    key={col.id}
-                    className="w-[82vw] max-w-[320px] md:w-auto snap-center shrink-0 md:shrink p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 flex flex-col min-h-96"
-                  >
-                    <div className="flex items-center justify-between mb-3 px-1">
-                      <span className={`text-xs font-bold uppercase tracking-wider ${col.color}`}>
-                        {col.label}
-                      </span>
-                      <span className="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-semibold">
-                        {colTasks.length}
-                      </span>
-                    </div>
-
-                    <div className="space-y-2 flex-1 overflow-y-auto">
-                      {colTasks.length === 0 ? (
-                        <div className="h-24 border border-dashed border-slate-800/80 rounded-xl flex items-center justify-center text-slate-500 text-xs">
-                          Empty column
-                        </div>
-                      ) : (
-                        colTasks.map((t) => (
-                          <div
-                            key={t.id}
-                            className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-indigo-500/40 transition shadow-sm"
-                          >
-                            <p className="text-xs font-semibold text-white">{t.title}</p>
-                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-900 text-[10px] text-slate-400">
-                              <span className="capitalize">{t.priority}</span>
-                              {t.dueDate && <span>{t.dueDate}</span>}
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <KanbanBoard
+              tasks={tasks}
+              dependencies={dependencies}
+              onStatusChange={handleStatusChange}
+              onPriorityChange={handlePriorityChange}
+              onTitleChange={handleTitleChange}
+            />
           )}
 
           {/* VIEW 3: CALENDAR VIEW */}
@@ -400,30 +451,14 @@ export function ProjectClient({
             </div>
           )}
 
-          {/* VIEW 4: TIMELINE VIEW */}
+          {/* VIEW 4: INTERACTIVE GANTT TIMELINE & DEPENDENCY NETWORK */}
           {taskView === "timeline" && (
-            <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <Clock className="w-4 h-4 text-indigo-400" />
-                Gantt Timeline & Phase Gates
-              </h3>
-              <div className="space-y-3">
-                {milestones.map((ms) => (
-                  <div key={ms.id} className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-                    <div className="flex items-center justify-between text-xs mb-2">
-                      <span className="font-bold text-white">{ms.name}</span>
-                      <span className="text-slate-400 font-mono">{ms.targetDate || "No target date"}</span>
-                    </div>
-                    <div className="w-full h-3 rounded-full bg-slate-800 overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-full"
-                        style={{ width: ms.status === "completed" ? "100%" : "50%" }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <GanttTimeline
+              tasks={tasks}
+              milestones={milestones}
+              dependencies={dependencies}
+              onStatusChange={handleStatusChange}
+            />
           )}
         </div>
       )}
