@@ -12,6 +12,7 @@ import * as searchService from "../lib/domain/search.service";
 import * as reportService from "../lib/domain/report.service";
 import * as apiKeyService from "../lib/domain/api-key.service";
 import * as aiDomainService from "../lib/domain/ai.service";
+import { aiClient } from "../lib/ai/client";
 import { MCP_TOOLS } from "../mcp/tools";
 import { MCP_RESOURCES } from "../mcp/resources";
 import { can } from "../lib/domain/permission.service";
@@ -218,9 +219,105 @@ async function runAllTests() {
   assert(portfolioReport.ok && portfolioReport.data.content.totalProjects > 0, "Portfolio health report generated with project counts");
 
   // -------------------------------------------------------------
-  // SUITE 7: CLEANUP OF TEMPORARY TEST DATA
+  // SUITE 7: PHASE 10 AI COMMAND INTELLIGENCE & AUTONOMOUS PLANNING
   // -------------------------------------------------------------
-  console.log("\n[SUITE 7] Teardown & Cleanliness");
+  console.log("\n[SUITE 8] Phase 10 AI Command Intelligence & Autonomous Planning");
+
+  // 1. AI Planning Preview (dry-run without DB write)
+  const planPreviewRes = await aiDomainService.previewProjectPlan(ctx, {
+    objective: "Verify AI Dry-Run Plan Tree Generation",
+    projectName: "AI Preview Verification Project",
+  });
+  assert(
+    planPreviewRes.ok &&
+      Array.isArray(planPreviewRes.data.workstreams) &&
+      planPreviewRes.data.workstreams.length > 0 &&
+      Array.isArray(planPreviewRes.data.tasks) &&
+      planPreviewRes.data.tasks.length > 0,
+    "previewProjectPlan returns dry-run project tree without database mutation"
+  );
+
+  // 2. AI Planning Commit (selective task persistence)
+  const testPlanTree: aiDomainService.ProjectPlanTree = {
+    projectName: "AI Committed Plan Test",
+    objective: "Verify transactional plan commit",
+    workstreams: ["Core Track", "QA Track"],
+    milestones: [{ name: "Target M1", targetDate: "2026-11-15" }],
+    tasks: [
+      { title: "Committed Task 1", workstream: "Core Track", priority: "urgent", status: "todo", selected: true },
+      { title: "Deselected Task 2", workstream: "QA Track", priority: "low", status: "todo", selected: false },
+    ],
+  };
+  const planCommitRes = await aiDomainService.commitProjectPlan(ctx, testPlanTree);
+  assert(
+    planCommitRes.ok && planCommitRes.data.tasksCreated === 1,
+    "commitProjectPlan persists project, workstreams, and filters unselected tasks"
+  );
+  if (planCommitRes.ok) {
+    await projectService.deleteProject(ctx, planCommitRes.data.project.id);
+  }
+
+  // 3. Natural Language Command Dispatching
+  // Test Reschedule Intent
+  const rescheduleCmdRes = await aiDomainService.dispatchCommand(ctx, {
+    command: `Reschedule task "${parentTaskRes.ok ? parentTaskRes.data.title : 'Parent Deliverable Task'}" to tomorrow`,
+  });
+  assert(
+    rescheduleCmdRes.ok && rescheduleCmdRes.data.intent === "reschedule_task" && rescheduleCmdRes.data.executed === true,
+    "dispatchCommand parses natural language reschedule command and updates dueDate"
+  );
+
+  // Test Status Change Intent
+  const statusCmdRes = await aiDomainService.dispatchCommand(ctx, {
+    command: `Mark task "${parentTaskRes.ok ? parentTaskRes.data.title : 'Parent Deliverable Task'}" as done`,
+  });
+  assert(
+    statusCmdRes.ok && statusCmdRes.data.intent === "change_status" && statusCmdRes.data.executed === true,
+    "dispatchCommand parses natural language status change command"
+  );
+
+  // Test Priority Change Intent
+  const priorityCmdRes = await aiDomainService.dispatchCommand(ctx, {
+    command: `Set priority of "${parentTaskRes.ok ? parentTaskRes.data.title : 'Parent Deliverable Task'}" to high`,
+  });
+  assert(
+    priorityCmdRes.ok && priorityCmdRes.data.intent === "change_priority" && priorityCmdRes.data.executed === true,
+    "dispatchCommand parses natural language priority change command"
+  );
+
+  // Test Filter Tasks Intent
+  const filterCmdRes = await aiDomainService.dispatchCommand(ctx, {
+    command: "Filter tasks by urgent",
+  });
+  assert(
+    filterCmdRes.ok && filterCmdRes.data.intent === "filter_tasks" && filterCmdRes.data.executed === true,
+    "dispatchCommand handles filter tasks intent"
+  );
+
+  // 4. Universal AI Streaming Token Generator
+  let streamedTokenCount = 0;
+  for await (const token of aiClient.stream("List 3 priority tasks")) {
+    if (token) streamedTokenCount++;
+  }
+  assert(streamedTokenCount > 0, `Universal AI stream() yielded ${streamedTokenCount} token chunks`);
+
+  // 5. Verify Expanded MCP Catalog
+  const updateTaskTool = MCP_TOOLS.find((t) => t.name === "updateTask");
+  assert(!!updateTaskTool, "MCP tool 'updateTask' is registered in MCP catalog");
+
+  const previewPlanTool = MCP_TOOLS.find((t) => t.name === "previewProjectPlan");
+  assert(!!previewPlanTool, "MCP tool 'previewProjectPlan' is registered in MCP catalog");
+
+  const commitPlanTool = MCP_TOOLS.find((t) => t.name === "commitProjectPlan");
+  assert(!!commitPlanTool, "MCP tool 'commitProjectPlan' is registered in MCP catalog");
+
+  const dispatchCmdTool = MCP_TOOLS.find((t) => t.name === "dispatchCommand");
+  assert(!!dispatchCmdTool, "MCP tool 'dispatchCommand' is registered in MCP catalog");
+
+  // -------------------------------------------------------------
+  // SUITE 9: CLEANUP OF TEMPORARY TEST DATA
+  // -------------------------------------------------------------
+  console.log("\n[SUITE 9] Teardown & Cleanliness");
   const delTestProj = await projectService.deleteProject(ctx, testProject.id);
   assert(delTestProj.ok, "Temporary test project successfully cleaned up");
 

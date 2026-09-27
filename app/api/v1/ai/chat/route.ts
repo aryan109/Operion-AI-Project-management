@@ -17,13 +17,21 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const prompt = body.prompt?.trim();
+    const incomingMessages: Array<{ role: "system" | "user" | "assistant"; content: string }> =
+      Array.isArray(body.messages) ? body.messages : [];
+    const shouldStream = Boolean(body.stream);
 
-    if (!prompt) {
+    if (!prompt && incomingMessages.length === 0) {
       return NextResponse.json(
-        { ok: false, error: "Prompt is required" },
+        { ok: false, error: "Prompt or messages array is required" },
         { status: 400 }
       );
     }
+
+    const latestPrompt =
+      prompt ||
+      incomingMessages[incomingMessages.length - 1]?.content ||
+      "";
 
     // 1. Gather live workspace context
     const projectsRes = await projectService.listProjects(ctx);
@@ -41,12 +49,14 @@ ${projects.slice(0, 10).map((p) => `  * ${p.name} [Health: ${p.health}, Status: 
 
 - Currently Blocked Tasks (${blockers.length}):
 ${blockers.slice(0, 8).map((b: any) => `  * [BLOCKED] ${b.title} (Project: ${b.projectName || "General"})`).join("\n") || "  * Zero blocked tasks."}
+
+- Overdue Tasks (${overdue.length}):
+${overdue.slice(0, 5).map((o: any) => `  * [OVERDUE] ${o.title} (Due: ${o.dueDate})`).join("\n") || "  * Zero overdue tasks."}
 `.trim();
 
-    const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
-      {
-        role: "system",
-        content: `You are Operion AI, an expert autonomous project management operator.
+    const systemMessage = {
+      role: "system" as const,
+      content: `You are Operion AI, an expert autonomous project management operator.
 You have real-time access to the user's workspace.
 Here is the current ground-truth workspace state:
 ${workspaceSummary}
@@ -55,15 +65,64 @@ Instructions:
 - Provide concise, actionable, and insightful answers.
 - If recommending actions or analyzing progress, reference specific projects or tasks from the workspace when relevant.
 - Keep formatting clean using markdown.`,
-      },
-      {
-        role: "user",
-        content: prompt,
-      },
+    };
+
+    // Build multi-turn context
+    const conversationMessages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
+      systemMessage,
     ];
 
-    const answer = await aiClient.complete(prompt, { messages, temperature: 0.3 });
+    if (incomingMessages.length > 0) {
+      // Filter out any client system messages to prevent system prompt injection
+      const sanitizedHistory = incomingMessages
+        .filter((m) => m.role === "user" || m.role === "assistant")
+        .slice(-10); // Maintain last 10 turns for context budget
+      conversationMessages.push(...sanitizedHistory);
+    } else {
+      conversationMessages.push({ role: "user", content: latestPrompt });
+    }
+
     const providerInfo = aiClient.getProviderInfo();
+
+    // 2. Stream response if requested
+    if (shouldStream) {
+      const encoder = new TextEncoder();
+      const customStream = new ReadableStream({
+        async start(controller) {
+          try {
+            for await (const token of aiClient.stream(latestPrompt, {
+              messages: conversationMessages,
+              temperature: 0.3,
+            })) {
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ token, provider: providerInfo.provider })}\n\n`)
+              );
+            }
+            controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
+            controller.close();
+          } catch (err: any) {
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify({ error: err.message })}\n\n`)
+            );
+            controller.close();
+          }
+        },
+      });
+
+      return new Response(customStream, {
+        headers: {
+          "Content-Type": "text/event-stream; charset=utf-8",
+          "Cache-Control": "no-cache, no-transform",
+          "Connection": "keep-alive",
+        },
+      });
+    }
+
+    // 3. Standard JSON response
+    const answer = await aiClient.complete(latestPrompt, {
+      messages: conversationMessages,
+      temperature: 0.3,
+    });
 
     return NextResponse.json({
       ok: true,

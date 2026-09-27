@@ -6,6 +6,7 @@ export interface AICompletionOptions {
 
 export interface AIClient {
   complete(prompt: string, options?: Partial<AICompletionOptions>): Promise<string>;
+  stream(prompt: string, options?: Partial<AICompletionOptions>): AsyncGenerator<string, void, unknown>;
   structuredComplete<T>(
     prompt: string,
     schemaDescription: string,
@@ -108,6 +109,103 @@ class UniversalAIClient implements AIClient {
     } catch (err) {
       console.warn("AI API request failed, using intelligent deterministic fallback:", err);
       return this.fallbackComplete(prompt);
+    }
+  }
+
+  async *stream(
+    prompt: string,
+    options?: Partial<AICompletionOptions>
+  ): AsyncGenerator<string, void, unknown> {
+    const config = this.resolveConfig();
+    if (!config.apiKey) {
+      const fullText = this.fallbackComplete(prompt);
+      const words = fullText.split(" ");
+      for (const word of words) {
+        yield word + " ";
+        await new Promise((r) => setTimeout(r, 20));
+      }
+      return;
+    }
+
+    try {
+      const messages = options?.messages || [
+        {
+          role: "system",
+          content:
+            "You are Operion AI, an expert autonomous project management operator. Respond directly, accurately, and actionably.",
+        },
+        { role: "user", content: prompt },
+      ];
+
+      const res = await fetch(config.endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${config.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: config.model,
+          messages,
+          temperature: options?.temperature ?? 0.3,
+          stream: true,
+        }),
+      });
+
+      if (!res.ok || !res.body) {
+        const errorText = await res.text().catch(() => "");
+        console.warn(`AI streaming error (${res.status}): ${errorText}`);
+        yield `[AI Notice: falling back to standard completion]\n\n`;
+        const fallback = await this.complete(prompt, options);
+        yield fallback;
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || !trimmed.startsWith("data:")) continue;
+          const dataStr = trimmed.replace(/^data:\s*/, "");
+          if (dataStr === "[DONE]") return;
+
+          try {
+            const parsed = JSON.parse(dataStr);
+            const delta = parsed.choices?.[0]?.delta?.content;
+            if (delta) {
+              yield delta;
+            }
+          } catch {
+            // Partial chunk or non-JSON ping
+          }
+        }
+      }
+
+      if (buffer.trim()) {
+        const trimmed = buffer.trim();
+        if (trimmed.startsWith("data:")) {
+          const dataStr = trimmed.replace(/^data:\s*/, "");
+          if (dataStr !== "[DONE]") {
+            try {
+              const parsed = JSON.parse(dataStr);
+              const delta = parsed.choices?.[0]?.delta?.content;
+              if (delta) yield delta;
+            } catch {}
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("AI streaming failed, yielding complete output:", err);
+      yield this.fallbackComplete(prompt);
     }
   }
 

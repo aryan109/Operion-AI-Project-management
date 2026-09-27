@@ -272,3 +272,76 @@ All updates, changes, and new files created across the development phases of the
   - **Automated Verification**:
     * Executed `npm.cmd run test:e2e`: **31 out of 31 tests passing (0 failures)** across all 7 test suites.
     * Executed `npm.cmd run build`: All routes compiled cleanly with 0 errors.
+
+## [2026-09-27] - Sprint 2: Phase 10 — Advanced AI Command Intelligence & Conversational Expansion
+
+### 1. Universal Streaming Token Engine (`lib/ai/client.ts`)
+- Added `stream(prompt: string, options?: Partial<AICompletionOptions>): AsyncGenerator<string, void, unknown>` to `AIClient` interface and `UniversalAIClient`.
+- Implemented real-time token streaming using server-sent event (SSE) parsing for Groq and OpenAI-compatible endpoints (`stream: true`).
+- Added graceful streaming fallback generator for offline testing or unconfigured API keys, yielding chunked tokens with natural cadence.
+
+### 2. Autonomous Planning Preview & Natural Language Dispatcher (`lib/domain/ai.service.ts`)
+- Added `previewProjectPlan(ctx, input)`: generates full project tree (workstreams, milestones, tasks) in dry-run mode without committing to database.
+- Added `commitProjectPlan(ctx, plan)`: commits user-verified plan tree with selective task filtering into PostgreSQL with relational integrity.
+- Refactored `planProject` to compose `previewProjectPlan` and `commitProjectPlan`.
+- Added `dispatchCommand(ctx, input)`: intelligent intent classification and routing engine executing operational actions across tasks:
+  * `assign_task`: extracts task and user names via fuzzy matching and assigns the task.
+  * `reschedule_task`: parses natural language dates ("tomorrow", "Friday", "next week", "YYYY-MM-DD") and updates task due dates.
+  * `change_status`: maps aliases ("done", "completed", "in_progress", "blocked", "todo") and invokes status transition with activity logging.
+  * `change_priority`: updates task priority (urgent/high/medium/low).
+  * `filter_tasks`: queries tasks matching status or priority criteria.
+  * `find_blockers`: surfaces all dependency-blocked tasks.
+  * `plan_project`: triggers interactive plan tree preview generation.
+  * `chat`: conversational query fallback.
+
+### 3. Multi-Turn Conversational Chat & SSE Streaming Route (`app/api/v1/ai/chat/route.ts`)
+- Upgraded the chat route to accept `messages` conversation history arrays in addition to single `prompt` strings.
+- Implemented Server-Sent Events (SSE) streaming output (`stream: true`) yielding real-time chunks with `data: {"token": "..."}` payloads and `[DONE]` terminator.
+- Injected dynamic ground-truth workspace context (active projects, health states, blocked tasks, overdue tasks) into the system prompt.
+- Sanitized client turns and maintained turn budget (last 10 turns) while enforcing system instructions.
+
+### 4. Interactive Project Planning REST Endpoint (`app/api/v1/ai/plan/route.ts`)
+- Created `POST /api/v1/ai/plan` handling:
+  * `action: "preview"`: invokes `previewProjectPlan` to return proposed workstreams, milestones, and tasks for UI review before committing.
+  * `action: "commit"`: invokes `commitProjectPlan` to persist the verified project tree to PostgreSQL in a single transactional step.
+
+### 5. Natural Language Command Dispatching Route (`app/api/v1/ai/command/route.ts`)
+- Created `POST /api/v1/ai/command` receiving natural language command strings (e.g., "Assign task X to user Y", "Reschedule task Z to tomorrow", "Mark task A as done", "Filter tasks by urgent").
+- Connects directly to `aiDomainService.dispatchCommand` for intent resolution, fuzzy task/user matching, and direct execution against PostgreSQL domain services with audit event logging.
+
+### 6. Expanded MCP Tools Catalog (`mcp/tools.ts`)
+- Added `updateTask`: Enables external LLMs and CLI tools to update task title, description, priority, status, and due dates.
+- Added `previewProjectPlan`: Exposes the AI planning preview dry-run tree over MCP.
+- Added `commitProjectPlan`: Commits confirmed plan trees to the workspace via MCP.
+- Added `dispatchCommand`: Exposes natural language command dispatching over MCP protocol.
+
+### 7. Interactive Multi-Step Project Tree Preview Modal (`components/ai/project-tree-preview.tsx`)
+- Created interactive React preview modal for AI-generated project plans:
+  * Stage 1: Editable Project Name & Objective inputs.
+  * Stage 2: Workstream pills and Milestone timeline badges.
+  * Stage 3: Hierarchical deliverables tree grouped by workstream with selective checkboxes, priority chips, quick task additions, and deletion actions.
+  * Real-time counter of selected deliverables and "Commit to Workspace" batch persistence action.
+  * Post-commit victory card with direct routing to the generated project cockpit.
+
+### 8. Revamped AI Command Bar (`components/ai/command-bar.tsx`)
+- Expanded natural language command dispatching:
+  * Automatically routes operational queries (assign, reschedule, mark status, update priority, filter tasks, find blockers) to `POST /api/v1/ai/command`.
+  * Displays rich visual cards showing task status chips, priority badges, and formatted due dates.
+  * Automatically triggers `router.refresh()` on operational mutation commands.
+- Interactive Project Tree Preview Flow:
+  * When planning a project, intercepts the generated preview and opens the `ProjectTreePreview` modal for user verification before persistence.
+- Multi-Turn Conversational Chat with Token Streaming:
+  * Supports full multi-turn conversation threads saved across browser sessions via `sessionStorage`.
+  * Connects to `/api/v1/ai/chat` with SSE token streaming, displaying dynamic live token updates with pulsing typing indicator.
+  * Includes thread reset button and multi-turn conversational follow-up input.
+
+### 9. Database Reconciliation, Automated Test Verification & Production Build
+- **PostgreSQL Task Completion**:
+  * Completed Task `c7b3fb6e-5abc-486d-84b7-8dc286b52c08`: Expand natural language command intent dispatching.
+  * Completed Task `17c3a5ce-6677-4698-8b3d-bf7ae1301d5d`: Add interactive multi-step preview modal for AI-generated project trees.
+  * Completed Task `84f29bc1-f1f7-4d08-bfc5-eb0b13306bc8`: Implement conversational chat session history with streaming token responses.
+  * Marked Milestone `3560b0b9-4ad0-4227-962b-250a46d36c89` (`Phase 10: Advanced AI Command Intelligence & Conversational Expansion`) as `completed`.
+  * Updated Flagship Project `db7b4065-002e-410c-a80c-c9598a611b3f` healthReason to reflect **31/34 deliverables complete (91%)**.
+- **Automated Verification**:
+  * Executed `npm.cmd run test:e2e`: **42 out of 42 tests passing (0 failures)** across 9 comprehensive suites.
+  * Executed `npm.cmd run build`: All 21 routes compiled cleanly with 0 type errors.

@@ -318,6 +318,28 @@ export const MCP_TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: "updateTask",
+    description: "Update task title, description, priority, status, or due date.",
+    inputSchema: {
+      type: "object",
+      required: ["taskId"],
+      properties: {
+        taskId: { type: "string" },
+        title: { type: "string" },
+        description: { type: "string" },
+        priority: { type: "string", enum: ["low", "medium", "high", "urgent"] },
+        status: { type: "string", enum: ["backlog", "todo", "in_progress", "blocked", "done"] },
+        dueDate: { type: "string", description: "YYYY-MM-DD" },
+      },
+    },
+    handler: async (ctx, args) => {
+      const { taskId, ...input } = args;
+      const res = await taskService.updateTask(ctx, taskId, input);
+      if (!res.ok) throw new Error(res.error.message);
+      return res.data;
+    },
+  },
+  {
     name: "deleteTask",
     description: "Delete a task.",
     inputSchema: {
@@ -512,6 +534,60 @@ export const MCP_TOOLS: ToolDefinition[] = [
       const res = await taskService.getTodayView(ctx);
       if (!res.ok) throw new Error(res.error.message);
       return res.data.overdue || [];
+    },
+  },
+  {
+    name: "previewProjectPlan",
+    description: "Generate a dry-run project plan proposal tree (workstreams, milestones, tasks) for interactive user inspection before committing.",
+    inputSchema: {
+      type: "object",
+      required: ["objective"],
+      properties: {
+        objective: { type: "string" },
+        constraints: { type: "string" },
+        projectName: { type: "string" },
+      },
+    },
+    handler: async (ctx, args) => {
+      const res = await aiDomainService.previewProjectPlan(ctx, args);
+      if (!res.ok) throw new Error(res.error.message);
+      return res.data;
+    },
+  },
+  {
+    name: "commitProjectPlan",
+    description: "Commit an approved project plan tree to the workspace database.",
+    inputSchema: {
+      type: "object",
+      required: ["plan"],
+      properties: {
+        plan: {
+          type: "object",
+          required: ["projectName", "objective", "workstreams", "tasks"],
+        },
+      },
+    },
+    handler: async (ctx, args) => {
+      const res = await aiDomainService.commitProjectPlan(ctx, args.plan);
+      if (!res.ok) throw new Error(res.error.message);
+      return res.data;
+    },
+  },
+  {
+    name: "dispatchCommand",
+    description: "Parse natural language commands (assign, reschedule, set status, filter, plan) and dispatch directly to domain operations.",
+    inputSchema: {
+      type: "object",
+      required: ["command"],
+      properties: {
+        command: { type: "string", description: "Natural language instruction, e.g., 'Assign task X to user Y' or 'Reschedule task Z to tomorrow'" },
+        projectId: { type: "string" },
+      },
+    },
+    handler: async (ctx, args) => {
+      const res = await aiDomainService.dispatchCommand(ctx, args);
+      if (!res.ok) throw new Error(res.error.message);
+      return res.data;
     },
   },
 ];
