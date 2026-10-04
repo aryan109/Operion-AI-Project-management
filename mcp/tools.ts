@@ -11,19 +11,51 @@ import * as reportService from "@/lib/domain/report.service";
 import * as aiDomainService from "@/lib/domain/ai.service";
 import * as searchService from "@/lib/domain/search.service";
 
+export interface ToolAnnotations {
+  readOnlyHint?: boolean;
+  destructiveHint?: boolean;
+  openWorldHint?: boolean;
+}
+
 export interface ToolDefinition {
   name: string;
+  title?: string;
   description: string;
   inputSchema: Record<string, unknown>;
+  outputSchema?: Record<string, unknown>;
+  annotations?: ToolAnnotations;
+  _meta?: Record<string, unknown>;
   handler: (ctx: Context, args: any) => Promise<any>;
 }
 
 export const MCP_TOOLS: ToolDefinition[] = [
   // --- WORKSPACE ---
   {
+    name: "getProfile",
+    title: "Get Profile",
+    description: "Get authenticated profile and workspace context for the current user/agent connection.",
+    inputSchema: { type: "object", properties: {} },
+    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+    _meta: { "openai/profile": true },
+    handler: async (ctx) => {
+      const orgRes = await workspaceService.getOrganization(ctx);
+      const org = orgRes.ok ? orgRes.data : { name: "Operion HQ", slug: "operion" };
+      return {
+        id: ctx.actor.id,
+        role: ctx.actor.role,
+        type: ctx.actor.type,
+        workspaceId: ctx.organizationId,
+        workspaceName: org.name,
+        workspaceSlug: org.slug,
+      };
+    },
+  },
+  {
     name: "getWorkspace",
+    title: "Get Workspace Details",
     description: "Get details and settings of the current workspace/organization.",
     inputSchema: { type: "object", properties: {} },
+    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     handler: async (ctx) => {
       const res = await workspaceService.getOrganization(ctx);
       if (!res.ok) throw new Error(res.error.message);
@@ -591,3 +623,27 @@ export const MCP_TOOLS: ToolDefinition[] = [
     },
   },
 ];
+
+// Ensure all tools have standardized annotations for ChatGPT plugins & MCP clients
+MCP_TOOLS.forEach((t) => {
+  if (!t.annotations) {
+    const n = t.name.toLowerCase();
+    const isDelete = n.includes("delete") || n.includes("remove") || n.includes("archive");
+    const isReadOnly =
+      n.startsWith("get") ||
+      n.startsWith("list") ||
+      n.startsWith("find") ||
+      n.startsWith("analyze") ||
+      n.startsWith("generate") ||
+      n.startsWith("search") ||
+      n.startsWith("preview") ||
+      n.startsWith("read");
+
+    t.annotations = {
+      readOnlyHint: isReadOnly,
+      destructiveHint: isDelete,
+      openWorldHint: false,
+    };
+  }
+});
+

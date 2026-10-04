@@ -1,0 +1,12 @@
+{
+  "name": "operion",
+  "version": "1.0.0",
+  "description": "Operion AI-Native Project Management Operating System",
+  "apps": "./.app.json",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Operion Project OS",
+    "shortDescription": "Autonomous AI-native project management OS",
+    "category": "Productivity"
+  }
+}

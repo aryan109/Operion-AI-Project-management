@@ -1,0 +1,45 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "operion",
+  "version": "1.0.0",
+  "description": "Autonomous AI-native project management operating system with real-time MCP tools, skills, and natural language command execution.",
+  "author": {
+    "name": "Operion Team",
+    "email": "support@operion.ai",
+    "url": "https://operion-ai-project-management.vercel.app"
+  },
+  "homepage": "https://operion-ai-project-management.vercel.app",
+  "repository": "https://github.com/aryan109/Operion-AI-Project-management",
+  "license": "MIT",
+  "keywords": [
+    "project-management",
+    "mcp",
+    "chatgpt-plugin",
+    "productivity",
+    "autonomous-agents",
+    "task-management"
+  ],
+  "extensions": {
+    "com.openai": {
+      "apps": "./.app.json",
+      "interface": {
+        "displayName": "Operion Project OS",
+        "shortDescription": "Autonomous AI-native project management OS",
+        "longDescription": "Operion connects ChatGPT directly to your real-time PostgreSQL project management workspace via Model Context Protocol (MCP). Plan workstreams, inspect blockers, track deliverables, update task priorities, and execute autonomous project operations.",
+        "developerName": "Operion",
+        "category": "Productivity",
+        "capabilities": ["Read", "Write"],
+        "websiteURL": "https://operion-ai-project-management.vercel.app",
+        "privacyPolicyURL": "https://operion-ai-project-management.vercel.app/privacy",
+        "termsOfServiceURL": "https://operion-ai-project-management.vercel.app/terms",
+        "defaultPrompt": [
+          "List all active projects in Operion and summarize their health.",
+          "What deliverables are currently blocked across our workspace?",
+          "Plan a project for launching an autonomous customer support agent.",
+          "Reschedule task 'Configure Smithery MCP' to tomorrow."
+        ],
+        "brandColor": "#6366F1"
+      }
+    }
+  }
+}

@@ -345,3 +345,78 @@ All updates, changes, and new files created across the development phases of the
 - **Automated Verification**:
   * Executed `npm.cmd run test:e2e`: **42 out of 42 tests passing (0 failures)** across 9 comprehensive suites.
   * Executed `npm.cmd run build`: All 21 routes compiled cleanly with 0 type errors.
+
+## [2026-10-05] - ChatGPT Plugins & MCP Ecosystem Connectivity Optimization
+
+### 1. Agent Plugins Skill Package (`skills/operion-project-os/SKILL.md`)
+- Created portable Agent Plugins skill package for Operion Project OS matching the OpenAI `skill://` URI format and YAML frontmatter standard.
+- Documents core operational principles (fact vs. interpretation, dry-run before commit, DAG cycle detection, and natural language command dispatching).
+
+### 2. Portable Agent Plugins Package Structure
+- Created `plugin.json` at root declaring the `agent-plugins.org/schemas/1.0.0/plugin.schema.json` schema and OpenAI extension (`extensions.com.openai`) with full interface metadata (branding, capabilities, default prompts).
+- Created `mcp.json` at root declaring `streamable-http` transport pointing to hosted `/api/mcp` endpoint.
+- Created `.app.json` mapping registered app connections.
+- Created `.agents/plugins/marketplace.json` configuring local and repository-level plugin marketplace discovery for testing in ChatGPT Desktop and Codex.
+- Created `.codex-plugin/plugin.json` for Codex compatibility overlay.
+
+### 3. OpenID Connect UserInfo Endpoint (`app/api/oauth/userinfo/route.ts`)
+- Implemented RFC-compliant OIDC UserInfo endpoint for OpenID Connect discovery and profile resolution.
+- Resolves authenticated actor (`sub`, `name`, `preferred_username`, `email`, `email_verified`, `roles`) and organization context.
+- Handles CORS preflight (`OPTIONS`) and returns standard `WWW-Authenticate: Bearer error="invalid_token"` on unauthenticated calls.
+
+### 4. RFC 9207 Issuer Identification Support (`app/api/oauth/authorize/route.ts`)
+- Added `iss` query parameter injection into OAuth 2.1 authorization redirects (both successful callback redirects and access denial callbacks).
+- Matches `authorization_response_iss_parameter_supported: true` advertised in `.well-known/oauth-authorization-server` to satisfy ChatGPT and OpenAI Agent Plugins security verification.
+
+### 5. MCP Server OpenAI / ChatGPT Plugins Optimization (`app/api/mcp/route.ts` & `mcp/resources.ts`)
+- Added `OPTIONS` handler supporting CORS preflight requests across all origins and headers (`Authorization`, `Content-Type`, `x-organization-id`, `mcp-session-id`).
+- Implemented RFC 9728 `WWW-Authenticate: Bearer resource_metadata="<host>/.well-known/oauth-protected-resource"` on 401 unauthenticated requests.
+- Added server `instructions` and SEP-2640 Skills capability declaration (`io.modelcontextprotocol/skills`) to `initialize` response.
+- Implemented `skills/list` and `skills/get` handlers returning `skill://operion/operion-project-os/SKILL.md` markdown content.
+- Enriched `tools/list` with tool titles, annotations (`readOnlyHint`, `destructiveHint`, `openWorldHint: false`), and `_meta` flags.
+- Enhanced `tools/call` to return typed `structuredContent` alongside text `content` for direct ChatGPT interpretation.
+- Registered `skill://operion/operion-project-os/SKILL.md` in `MCP_RESOURCES` for resource-based inspection.
+
+### 6. OpenAPI 3.1.0 Specification Expansion (`app/api/v1/openapi.json/route.ts`)
+- Exposed `/api/v1/ai/command` for Custom GPT and external agent natural language operational commands.
+- Exposed `/api/v1/ai/plan` with preview and batch persistence actions for autonomous project tree generation.
+- Exposed `/api/v1/ai/chat` for grounded multi-turn project assistant dialogues.
+
+### 7. Connectors Hub & Settings MCP Guide Upgrade (`app/(ui)/connectors/*` & `app/(ui)/settings/mcp-guide.tsx`)
+- Added dedicated **OpenAI Agent Plugins (Standard)** connection card in Connectors Hub with 1-click remote MCP copying, streamable HTTP transport declaration, and direct link to official documentation.
+- Upgraded Settings MCP Guide (`mcp-guide.tsx`) ChatGPT tab with dual-mode support:
+  * **Option A**: ChatGPT Agent Plugins & Remote MCP (`plugin.json`, `mcp.json`, RFC 9728, RFC 9207 `iss` discovery, SEP-2640 Skills).
+  * **Option B**: Custom GPT Actions with OpenAPI 3.1 schema.
+
+### 8. JWKS Discovery Endpoint (`app/.well-known/jwks.json/route.ts`)
+- Created JSON Web Key Set (JWKS) discovery endpoint responding with standard key set and CORS preflight.
+- Linked `jwks_uri` inside `.well-known/openid-configuration` for OpenID Connect Core 1.0 client verification.
+
+### 9. Comprehensive Verification & Production Build
+- **Automated Test Suite Expansion (`scripts/run-e2e-tests.ts`)**:
+  * Created `SUITE 10: OpenAI Agent Plugins & MCP Protocol Optimization` covering:
+    - `plugin.json` root manifest conformance and `com.openai` extension metadata.
+    - `mcp.json` streamable-http remote transport declaration.
+    - `.agents/plugins/marketplace.json` and `.codex-plugin/plugin.json` compatibility.
+    - `skills/operion-project-os/SKILL.md` YAML frontmatter and operational rules.
+    - `getProfile` tool registration with `_meta["openai/profile"] = true` and `readOnlyHint: true`.
+    - Explicit `readOnlyHint`, `destructiveHint`, and `openWorldHint` annotations across all 36 MCP tools.
+    - `skill://operion/operion-project-os/SKILL.md` resource registration in `MCP_RESOURCES`.
+    - RFC 9728 protected resource metadata endpoint (`/.well-known/oauth-protected-resource`).
+    - RFC 8414 & RFC 9207 issuer identification (`/.well-known/oauth-authorization-server`).
+    - OIDC discovery endpoint (`/.well-known/openid-configuration`).
+    - Standard ChatGPT plugin manifest (`/.well-known/ai-plugin.json`).
+    - OIDC UserInfo endpoint (`/api/oauth/userinfo`).
+    - MCP CORS preflight (`OPTIONS /api/mcp`).
+    - MCP `initialize` with skills extension and server instructions.
+    - MCP `skills/list` and `skills/get` handlers.
+    - MCP `tools/call` dual format (`content` and `structuredContent`).
+  * Executed `npm.cmd run test:e2e`: **64 out of 64 tests passed (0 failures)**.
+- **Production Build**:
+  * Executed `npm.cmd run build`: All 27 application routes and static assets compiled cleanly with 0 type errors.
+
+
+
+
+
+

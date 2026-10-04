@@ -12,6 +12,11 @@ export async function GET(req: NextRequest) {
   const codeChallenge = searchParams.get("code_challenge") || "";
   const codeChallengeMethod = searchParams.get("code_challenge_method") || "S256";
 
+  const host =
+    process.env.NEXT_PUBLIC_HOSTED_URL ||
+    `${req.nextUrl.protocol}//${req.nextUrl.host}` ||
+    "https://operion-ai-project-management.vercel.app";
+
   const ctx = await getDefaultContext();
   const orgRes = await workspaceService.getOrganization(ctx);
   const orgName = orgRes.ok ? orgRes.data.name : "Operion HQ";
@@ -120,7 +125,7 @@ export async function GET(req: NextRequest) {
       <input type="hidden" name="code_challenge_method" value="${codeChallengeMethod}">
       <button type="submit" class="btn">Authorize & Connect</button>
     </form>
-    <a href="${redirectUri ? `${redirectUri}?error=access_denied&state=${state}` : '#'}" class="cancel">Cancel</a>
+    <a href="${redirectUri ? `${redirectUri}?error=access_denied&state=${state}&iss=${encodeURIComponent(host)}` : '#'}" class="cancel">Cancel</a>
   </div>
 </body>
 </html>`;
@@ -132,6 +137,11 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const host =
+      process.env.NEXT_PUBLIC_HOSTED_URL ||
+      `${req.nextUrl.protocol}//${req.nextUrl.host}` ||
+      "https://operion-ai-project-management.vercel.app";
+
     const formData = await req.formData();
     const clientId = formData.get("client_id")?.toString() || "claude";
     const redirectUri = formData.get("redirect_uri")?.toString() || "";
@@ -156,11 +166,13 @@ export async function POST(req: NextRequest) {
         ok: true,
         code,
         state,
+        iss: host,
         message: "Authorization granted. Redirect URI was not specified.",
       });
     }
 
     const redirectTarget = new URL(redirectUri);
+    redirectTarget.searchParams.set("iss", host);
     redirectTarget.searchParams.set("code", code);
     if (state) redirectTarget.searchParams.set("state", state);
 

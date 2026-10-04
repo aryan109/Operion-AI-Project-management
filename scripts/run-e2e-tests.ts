@@ -17,6 +17,16 @@ import { MCP_TOOLS } from "../mcp/tools";
 import { MCP_RESOURCES } from "../mcp/resources";
 import { can } from "../lib/domain/permission.service";
 import { eq } from "drizzle-orm";
+import * as protectedResourceRoute from "../app/.well-known/oauth-protected-resource/route";
+import * as oauthServerRoute from "../app/.well-known/oauth-authorization-server/route";
+import * as openidConfigRoute from "../app/.well-known/openid-configuration/route";
+import * as aiPluginRoute from "../app/.well-known/ai-plugin.json/route";
+import * as userinfoRoute from "../app/api/oauth/userinfo/route";
+import * as mcpRoute from "../app/api/mcp/route";
+import { NextRequest } from "next/server";
+import fs from "fs";
+import path from "path";
+
 
 let totalTests = 0;
 let passedTests = 0;
@@ -313,6 +323,120 @@ async function runAllTests() {
 
   const dispatchCmdTool = MCP_TOOLS.find((t) => t.name === "dispatchCommand");
   assert(!!dispatchCmdTool, "MCP tool 'dispatchCommand' is registered in MCP catalog");
+
+  // -------------------------------------------------------------
+  // SUITE 10: OPENAI AGENT PLUGINS & MCP PROTOCOL OPTIMIZATION
+  // -------------------------------------------------------------
+  console.log("\n[SUITE 10] OpenAI Agent Plugins & MCP Protocol Optimization");
+
+  // 1. Files & Manifests on disk
+  const pluginJsonPath = path.join(process.cwd(), "plugin.json");
+  assert(fs.existsSync(pluginJsonPath), "plugin.json exists at project root");
+  const pluginJson = JSON.parse(fs.readFileSync(pluginJsonPath, "utf-8"));
+  assert(pluginJson.name === "operion" && !!pluginJson.extensions?.["com.openai"], "plugin.json conforms to Agent Plugins schema with com.openai extension");
+
+  const mcpJsonPath = path.join(process.cwd(), "mcp.json");
+  assert(fs.existsSync(mcpJsonPath), "mcp.json transport manifest exists at root");
+  const mcpJson = JSON.parse(fs.readFileSync(mcpJsonPath, "utf-8"));
+  assert(mcpJson.mcpServers?.operion?.type === "streamable-http", "mcp.json declares streamable-http remote transport");
+
+  const marketplaceJsonPath = path.join(process.cwd(), ".agents/plugins/marketplace.json");
+  assert(fs.existsSync(marketplaceJsonPath), ".agents/plugins/marketplace.json exists for ChatGPT desktop testing");
+
+  const skillPath = path.join(process.cwd(), "skills/operion-project-os/SKILL.md");
+  assert(fs.existsSync(skillPath), "skills/operion-project-os/SKILL.md exists");
+  const skillContent = fs.readFileSync(skillPath, "utf-8");
+  assert(skillContent.includes("name: operion-project-os") && skillContent.includes("previewProjectPlan"), "Skill markdown contains YAML metadata and workflow definitions");
+
+  // 2. MCP Annotations & Metadata
+  const getProfileTool = MCP_TOOLS.find((t) => t.name === "getProfile");
+  assert(!!getProfileTool && getProfileTool._meta?.["openai/profile"] === true, "getProfile tool is registered with _meta['openai/profile'] = true");
+  assert(getProfileTool?.annotations?.readOnlyHint === true, "getProfile tool is annotated with readOnlyHint: true");
+
+  const allAnnotated = MCP_TOOLS.every((t) => t.annotations && typeof t.annotations.readOnlyHint === "boolean");
+  assert(allAnnotated, `All ${MCP_TOOLS.length} MCP tools have explicit readOnlyHint annotations`);
+
+  const skillResource = MCP_RESOURCES.find((r) => r.uri === "skill://operion/operion-project-os/SKILL.md");
+  assert(!!skillResource, "skill://operion/operion-project-os/SKILL.md is registered in MCP_RESOURCES");
+
+  // 3. Discovery & OAuth Endpoints
+  const dummyReq = (url: string, init?: RequestInit) => new NextRequest(new URL(url, "http://localhost:3000"), init as any);
+
+  const protRes = await protectedResourceRoute.GET(dummyReq("/.well-known/oauth-protected-resource"));
+  const protJson = await protRes.json();
+  assert(protJson.resource && Array.isArray(protJson.authorization_servers), "GET /.well-known/oauth-protected-resource returns RFC 9728 protected resource metadata");
+
+  const oauthRes = await oauthServerRoute.GET(dummyReq("/.well-known/oauth-authorization-server"));
+  const oauthJson = await oauthRes.json();
+  assert(oauthJson.authorization_response_iss_parameter_supported === true && !!oauthJson.issuer, "GET /.well-known/oauth-authorization-server advertises RFC 9207 iss support");
+
+  const oidcRes = await openidConfigRoute.GET(dummyReq("/.well-known/openid-configuration"));
+  const oidcJson = await oidcRes.json();
+  assert(!!oidcJson.userinfo_endpoint && !!oidcJson.jwks_uri, "GET /.well-known/openid-configuration returns valid OIDC discovery payload");
+
+  const aiPlugRes = await aiPluginRoute.GET(dummyReq("/.well-known/ai-plugin.json"));
+  const aiPlugJson = await aiPlugRes.json();
+  assert(aiPlugJson.schema_version === "v1" && aiPlugJson.name_for_model === "operion_project_os", "GET /.well-known/ai-plugin.json returns valid ChatGPT plugin manifest");
+
+  const userinfoRes = await userinfoRoute.GET(dummyReq("/api/oauth/userinfo"));
+  const userinfoJson = await userinfoRes.json();
+  assert(userinfoRes.status === 200 && !!userinfoJson.sub && !!userinfoJson.organization, "GET /api/oauth/userinfo returns authenticated actor profile and workspace context");
+
+  // 4. MCP Route Handler
+  const mcpOptRes = await mcpRoute.OPTIONS();
+  assert(mcpOptRes.status === 204 && mcpOptRes.headers.get("access-control-allow-origin") === "*", "OPTIONS /api/mcp handles CORS preflight with 204");
+
+  const mcpGetRes = await mcpRoute.GET(dummyReq("/api/mcp"));
+  const mcpGetJson = await mcpGetRes.json();
+  assert(mcpGetJson.transport === "streamable-http" && mcpGetJson.toolsCount >= 30, "GET /api/mcp returns streamable-http status and tool counts");
+
+  const initPost = dummyReq("/api/mcp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 101, method: "initialize" }),
+  });
+  const initRes = await mcpRoute.POST(initPost);
+  const initJson = await initRes.json();
+  assert(
+    !!initJson.result?.capabilities?.extensions?.["io.modelcontextprotocol/skills"] && !!initJson.result?.instructions,
+    "POST /api/mcp initialize declares skills extension and server instructions"
+  );
+
+  const skillsListPost = dummyReq("/api/mcp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 102, method: "skills/list" }),
+  });
+  const skillsListRes = await mcpRoute.POST(skillsListPost);
+  const skillsListJson = await skillsListRes.json();
+  assert(
+    Array.isArray(skillsListJson.result?.skills) && skillsListJson.result.skills[0]?.name === "operion-project-os",
+    "POST /api/mcp skills/list returns operion-project-os skill"
+  );
+
+  const skillsGetPost = dummyReq("/api/mcp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 103, method: "skills/get", params: { name: "operion-project-os" } }),
+  });
+  const skillsGetRes = await mcpRoute.POST(skillsGetPost);
+  const skillsGetJson = await skillsGetRes.json();
+  assert(
+    skillsGetJson.result?.skill?.content?.includes("# Operion AI Project Management Skill"),
+    "POST /api/mcp skills/get returns full skill markdown content"
+  );
+
+  const profileCallPost = dummyReq("/api/mcp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 104, method: "tools/call", params: { name: "getProfile" } }),
+  });
+  const profileCallRes = await mcpRoute.POST(profileCallPost);
+  const profileCallJson = await profileCallRes.json();
+  assert(
+    profileCallJson.result?.structuredContent && profileCallJson.result?.content?.length > 0,
+    "POST /api/mcp tools/call returns structuredContent alongside text content"
+  );
 
   // -------------------------------------------------------------
   // SUITE 9: CLEANUP OF TEMPORARY TEST DATA

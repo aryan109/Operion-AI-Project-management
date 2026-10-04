@@ -103,12 +103,30 @@ export function McpGuide({
   const getActiveCode = () => {
     if (clientTab === "claude") return claudeConfig;
     if (clientTab === "gemini") return geminiConfig;
-    return `// ChatGPT Custom GPT Action Configuration:
-// 1. In ChatGPT GPT Builder -> Actions -> Create new action
-// 2. Paste OpenAPI URL or import:
+    return `// ========================================================
+// OPTION A: ChatGPT Agent Plugins & Remote MCP Transport
+// Specification: https://developers.openai.com/plugins
+// ========================================================
+Server Endpoint: ${activeUrl}
+Plugin Base URL: ${hostedUrl}
+Protocol: streamable-http (Model Context Protocol 2024-11-05)
+Extensions: io.modelcontextprotocol/skills
+Skill URI: skill://operion/operion-project-os/SKILL.md
+
+OAuth 2.1 & RFC 9207 Issuer Metadata:
+- Protected Resource: ${hostedUrl}/.well-known/oauth-protected-resource
+- Authorization Server: ${hostedUrl}/.well-known/oauth-authorization-server
+- OpenID Discovery: ${hostedUrl}/.well-known/openid-configuration
+- UserInfo Endpoint: ${hostedUrl}/api/oauth/userinfo
+
+// ========================================================
+// OPTION B: ChatGPT Custom GPT Actions (OpenAPI 3.1)
+// ========================================================
+1. In ChatGPT GPT Builder -> Actions -> Create new action
+2. Import Schema URL:
 ${chatgptOpenApiUrl}
-// 3. Authentication: API Key (Bearer)
-// 4. Token: <YOUR_OPERION_API_KEY>`;
+3. Authentication: API Key (Bearer)
+4. Token: <Paste Operion API key from section below>`;
   };
 
   const handleCopy = () => {
@@ -209,7 +227,7 @@ ${chatgptOpenApiUrl}
                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
             }`}
           >
-            <span>ChatGPT Custom Actions</span>
+            <span>ChatGPT Plugins & MCP</span>
           </button>
         </div>
 
@@ -266,22 +284,22 @@ ${chatgptOpenApiUrl}
           {clientTab === "chatgpt" && (
             <>
               <span className="text-emerald-400 font-semibold">
-                {`// ChatGPT Custom GPT Setup (OpenAPI 3.1 Schema Integration):\n`}
+                {`// ChatGPT Agent Plugins & MCP Connectivity (https://developers.openai.com/plugins):\n`}
               </span>
               <span className="text-slate-300">
-{`1. In ChatGPT, navigate to "My GPTs" -> "Create a GPT" -> "Configure" -> "Actions" -> "Create new action"
-2. Under Schema, import URL or copy JSON from:
+{`1. OpenAI Agent Plugins Root Manifest: ${hostedUrl}/plugin.json
+2. Streamable Remote MCP Transport: ${activeUrl}
+3. RFC 9728 Protected Resource: ${hostedUrl}/.well-known/oauth-protected-resource
+4. RFC 8414 & RFC 9207 Issuer: ${hostedUrl}/.well-known/oauth-authorization-server
+5. OpenID Connect Discovery: ${hostedUrl}/.well-known/openid-configuration
+6. Built-in SEP-2640 Skill: skill://operion/operion-project-os/SKILL.md
+
+// Custom GPT Actions (OpenAPI 3.1 Fallback):
+Import schema URL directly in ChatGPT GPT Builder:
 `}
               </span>
               <span className="text-cyan-300 underline font-bold">
                 {chatgptOpenApiUrl}
-              </span>
-              <span className="text-slate-300">
-{`\n3. Under Authentication:
-   - Authentication Type: API Key
-   - Auth Type: Bearer
-   - API Key: <Paste an Operion API key issued in the section below>
-4. Save and publish to your team or personal account!`}
               </span>
             </>
           )}

@@ -241,12 +241,59 @@ export function ConnectorsClient({
             OpenAI ChatGPT & Registry Connectors
           </h2>
           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-            OpenAPI 3.1 & Smithery
+            Plugins, OpenAPI 3.1 & Smithery
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {/* Card 4: ChatGPT Custom GPT & Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* Card 4: ChatGPT Agent Plugins & Remote MCP */}
+          <div className="glass-panel p-5 rounded-2xl border border-teal-500/30 bg-teal-950/10 flex flex-col justify-between space-y-4 hover:border-teal-500/50 transition">
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-teal-400">OpenAI Agent Plugins (Standard)</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300">
+                  developers.openai.com
+                </span>
+              </div>
+              <h3 className="text-sm font-black text-white">ChatGPT Plugin & Remote MCP</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Connect ChatGPT directly using the official OpenAI Agent Plugins standard with RFC 9728 OAuth discovery, streamable MCP transport, and SEP-2640 Skills.
+              </p>
+              <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-cyan-300 break-all">
+                {mcpUrl}
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-2">
+              <button
+                onClick={() => copyToClipboard(mcpUrl, "mcpPluginUrl")}
+                className="flex-1 py-2 px-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-md shadow-teal-600/25"
+              >
+                {copiedKey === "mcpPluginUrl" ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-white" />
+                    <span>Copied Remote MCP URL!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copy Remote MCP URL</span>
+                  </>
+                )}
+              </button>
+              <a
+                href="https://developers.openai.com/plugins"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-medium flex items-center justify-center gap-1.5 border border-slate-800 transition"
+              >
+                <span>Docs</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+
+          {/* Card 5: ChatGPT Custom GPT & Actions */}
           <div className="glass-panel p-5 rounded-2xl border border-emerald-500/30 bg-emerald-950/10 flex flex-col justify-between space-y-4 hover:border-emerald-500/50 transition">
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">

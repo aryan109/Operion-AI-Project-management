@@ -204,6 +204,92 @@ export async function GET(req: NextRequest) {
           },
         },
       },
+      "/api/v1/ai/command": {
+        post: {
+          summary: "Dispatch natural language AI project command",
+          operationId: "dispatchAiCommand",
+          description: "Parses natural language instructions to assign tasks, reschedule due dates, update priority, mark tasks as complete, or filter items.",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["command"],
+                  properties: {
+                    command: { type: "string", example: "Assign database migrations to Alex and make it urgent" },
+                    projectId: { type: "string", description: "Optional project scope ID" },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            "200": { description: "Command parsed and executed successfully" },
+          },
+        },
+      },
+      "/api/v1/ai/plan": {
+        post: {
+          summary: "Autonomous AI project planning (preview & commit)",
+          operationId: "planProjectAi",
+          description: "Generates or persists a full project breakdown including workstreams, milestones, and deliverables.",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    action: { type: "string", enum: ["preview", "commit"], default: "preview" },
+                    objective: { type: "string", example: "Build an iOS Swift mobile app with offline sync and biometric auth" },
+                    projectName: { type: "string", example: "Operion Mobile Client" },
+                    constraints: { type: "string", example: "Must ship in 6 weeks with 2 engineers" },
+                    plan: { type: "object", description: "Plan tree object required when action is commit" },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            "200": { description: "Project plan generated or persisted" },
+          },
+        },
+      },
+      "/api/v1/ai/chat": {
+        post: {
+          summary: "Conversational project assistant with live workspace grounding",
+          operationId: "chatWithOperionAi",
+          description: "Interactive multi-turn conversation with real-time awareness of active projects, overdue deliverables, and blocked tasks.",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    prompt: { type: "string", example: "What is currently blocking the backend launch?" },
+                    messages: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          role: { type: "string", enum: ["system", "user", "assistant"] },
+                          content: { type: "string" },
+                        },
+                      },
+                    },
+                    stream: { type: "boolean", default: false },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            "200": { description: "AI conversation response" },
+          },
+        },
+      },
       "/api/mcp": {
         post: {
           summary: "Model Context Protocol (MCP) JSON-RPC Endpoint",
