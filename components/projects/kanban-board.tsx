@@ -25,6 +25,8 @@ interface KanbanTask {
 interface KanbanBoardProps {
   tasks: KanbanTask[];
   dependencies?: { blockingTaskId: string; blockedTaskId: string }[];
+  milestones?: any[];
+  workstreams?: any[];
   onStatusChange: (taskId: string, newStatus: string) => void;
   onPriorityChange?: (taskId: string, newPriority: string) => void;
   onTitleChange?: (taskId: string, newTitle: string) => void;
@@ -41,6 +43,8 @@ const COLUMNS = [
 export function KanbanBoard({
   tasks,
   dependencies = [],
+  milestones = [],
+  workstreams = [],
   onStatusChange,
   onPriorityChange,
   onTitleChange,
@@ -49,6 +53,9 @@ export function KanbanBoard({
   const [activeDropColId, setActiveDropColId] = useState<string | null>(null);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
+
+  const milestoneMap = new Map(milestones.map((m) => [m.id, m]));
+  const workstreamMap = new Map(workstreams.map((w) => [w.id, w]));
 
   const blockedTaskIds = new Set(dependencies.map((d) => d.blockedTaskId));
   const blockingTaskIds = new Set(dependencies.map((d) => d.blockingTaskId));
@@ -226,6 +233,22 @@ export function KanbanBoard({
                         <p className="text-[11px] text-slate-400 line-clamp-2 mb-2 pl-5">
                           {t.description}
                         </p>
+                      )}
+
+                      {/* Milestone & Track Pills */}
+                      {(t.milestoneId || t.workstreamId) && (
+                        <div className="flex flex-wrap gap-1 mb-2 pl-5">
+                          {t.milestoneId && milestoneMap.get(t.milestoneId) && (
+                            <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/25 truncate max-w-[130px]">
+                              🎯 {milestoneMap.get(t.milestoneId)?.name}
+                            </span>
+                          )}
+                          {t.workstreamId && workstreamMap.get(t.workstreamId) && (
+                            <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/25 truncate max-w-[130px]">
+                              🛤️ {workstreamMap.get(t.workstreamId)?.name}
+                            </span>
+                          )}
+                        </div>
                       )}
 
                       {/* Card Footer Badges */}

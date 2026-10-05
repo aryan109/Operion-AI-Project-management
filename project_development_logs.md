@@ -415,6 +415,78 @@ All updates, changes, and new files created across the development phases of the
 - **Production Build**:
   * Executed `npm.cmd run build`: All 27 application routes and static assets compiled cleanly with 0 type errors.
 
+---
+
+## [2026-10-05] - Milestone-Centric Architecture, Nested Hierarchical Tasks & Interactive Track Views
+
+### Overview of Upgrades
+Implemented comprehensive structural and visual upgrades across the Project Detail experience to ensure Milestones, Phases, and Tracks are front-and-center throughout the application:
+
+1. **Tab Structure Formalization**:
+   - Reorganized project navigation into six dedicated tabs:
+     * **Tasks**: Nested task hierarchy, grouped by milestone, subtasks, milestone/track badges, and view switcher.
+     * **Overview**: Summary metrics, interactive Milestone Phase cards, and interactive Strategic Track cards.
+     * **Tracks**: Dedicated workstream view where deliverables are organized and grouped under their respective milestones.
+     * **Milestones**: Sequential Stage-Gate Phase cards that expand to display all tasks in that milestone with progress tracking.
+     * **Dependencies**: Cross-task network displaying prerequisite and dependent tasks with milestone badges, track badges, and cross-milestone handoff indicators.
+     * **Activity**: Live audit stream of entity mutations and actions.
+
+2. **Hierarchical Nested Task List (`components/projects/nested-task-list.tsx`)**:
+   - Organized deliverables by **Milestone / Phase**:
+     * Milestone group headers displaying Phase title, status badge (`upcoming`, `active`, `completed`, `at_risk`), target date, and animated completion progress bar.
+     * Collapsible milestone sections with individual and bulk toggle capabilities.
+     * Dedicated "General Backlog / Unscheduled" section for unassigned deliverables with instant milestone assignment.
+   - Support for **Parent & Subtask Nesting**:
+     * Top-level tasks render with subtask count badges and expand/collapse toggles.
+     * Nested child subtasks render with visual tree indentation guides and subtask status indicators.
+     * Quick inline "+ Subtask" creation directly under parent deliverables.
+   - Comprehensive Badges & In-Place Controls:
+     * Milestone badge with interactive selector dropdown to reassign milestone in 1 click.
+     * Track / Workstream badge with interactive selector dropdown to reassign workstream.
+     * Priority cycle button (low -> medium -> high -> urgent) with color coding.
+     * Status dropdown (Backlog, Todo, In Progress, Blocked, Done).
+     * Inline title editing with keyboard shortcuts (`Enter` to save, `Escape` to cancel).
+     * Due date indicators and deliverable deletion actions.
+   - View Mode Switcher:
+     * Added toggle between "Grouped by Milestone" and "Flat List".
+     * Maintained seamless switching between List, Kanban Board, Calendar, and Gantt Timeline.
+
+3. **Interactive Overview View (`components/projects/overview-view.tsx`)**:
+   - Key performance indicators: Progress percentage, completed deliverables, milestones count, active tracks, and critical blockers.
+   - **Interactive Milestone Phase Progression Deck**:
+     * Cards for each project phase displaying target dates, status, and completion ratios.
+     * Clicking any milestone card expands an inline inspection drawer showing all deliverables in that milestone with status checkboxes and track badges.
+   - **Interactive Strategic Tracks Deck**:
+     * Workstream cards displaying total tasks, completed tasks, and milestone distribution tags.
+     * Clicking any track card expands an inline inspection drawer showing its deliverables grouped by milestone.
+   - Strategic objectives statement and systems health telemetry diagnostic.
+
+4. **Dedicated Tracks View (`components/projects/tracks-view.tsx`)**:
+   - Comprehensive workstream cards with progress bars and milestone coverage tags.
+   - Clicking a track card displays all deliverables for that track **grouped by Milestone** (`🎯 Phase 1`, `🎯 Phase 2`, etc.).
+   - Inline task creation pre-configured for the selected workstream with milestone assignment.
+
+5. **Dedicated Milestones View (`components/projects/milestones-view.tsx`)**:
+   - Sequential stage-gate cards with phase badges, deadlines, status badges, and deliverable ratios.
+   - Clicking any milestone card expands to show the complete nested list of deliverables for that phase.
+   - Quick "+ Add Task to this Milestone" form pre-filling the milestone ID.
+
+6. **Rich Milestone-Aware Dependencies View (`components/projects/dependencies-view.tsx`)**:
+   - Replaced raw UUID displays with readable cards resolving task titles, statuses, and priorities.
+   - Milestone badges and Track badges displayed for both the blocking prerequisite and blocked dependent task.
+   - Visual classification badge:
+     * `Intra-Milestone Dependency`: Precedence within the same phase.
+     * `Cross-Milestone Phase Handoff`: Precedence crossing milestone boundaries (e.g. Phase 1 ➔ Phase 2).
+   - Dynamic resolution indicator: `Resolved` (green) vs `Active Blocker` (pulsing rose).
+   - "Link Dependency" modal/form with milestone-prefixed task options (`[Phase Name] Task Title`).
+
+7. **Kanban Board Badge Integration (`components/projects/kanban-board.tsx`)**:
+   - Updated Kanban cards to render Milestone badges and Track badges alongside priority pills and due dates.
+
+8. **Production Verification & Build**:
+   - Executed `npm.cmd run build`: All 27 application routes compiled successfully with 0 type errors.
+
+
 
 
 
